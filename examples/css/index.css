@@ -1,0 +1,10 @@
+.root {
+    color: red;
+    margin-left: 100px;
+}
+
+.box {
+    margin-left: 10px;
+    height: 900px;
+    width: 10px;
+}
