@@ -1,10 +1,5 @@
-[package]
-name = "cssorder"
-version = "0.1.0"
-edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-clap = { version = "3.2.22", features = ["derive"] }
-raffia = "0.1.0"
+[workspace]
+members = [
+    "./packages/cssorder",
+    "./packages/raffia_codegen"
+]

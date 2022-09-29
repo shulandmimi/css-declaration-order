@@ -36,9 +36,6 @@ impl Sorter {
     }
 
     fn declaration<'a>(&self, declar: &Declaration<'a>) -> isize {
-        // self.weight_map.get()
-
-        // declar.name
         let name = self.ident(declar.name.as_literal().unwrap());
 
         let name = name.as_str();

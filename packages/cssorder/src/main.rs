@@ -5,7 +5,6 @@ use std::{
     path::PathBuf,
     str::FromStr,
 };
-// use raffia::Parser;
 
 use clap::Parser;
 use raffia::{ast::Stylesheet, Syntax};
@@ -23,10 +22,6 @@ fn exists(path: &PathBuf) -> bool {
 
 fn main() {
     let args = Cli::parse();
-
-    // args.paths
-
-    // println!("{:?}", args.paths);
 
     if args.paths.len() == 0 {
         return;
