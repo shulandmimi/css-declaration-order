@@ -1,13 +1,15 @@
 #![feature(fs_try_exists)]
 #![feature(is_some_with)]
 use std::{
+    fmt::Result,
     fs::{read, try_exists},
     path::PathBuf,
     str::FromStr,
 };
 
-use clap::Parser;
+use clap::{Parser, builder::PathBufValueParser};
 use raffia::{ast::Stylesheet, Syntax};
+use raffia_codegen::{CodeGenerator, Emit};
 
 #[derive(Parser)]
 #[clap(author, version, about)]
@@ -21,16 +23,18 @@ fn exists(path: &PathBuf) -> bool {
 }
 
 fn main() {
-    let args = Cli::parse();
+    // let args = Cli::parse();
 
-    if args.paths.len() == 0 {
-        return;
-    }
+    // if args.paths.len() == 0 {
+    //     return;
+    // }
 
-    let filename = PathBuf::from_str(args.paths[0].as_str()).unwrap();
-    if !exists(&filename) {
-        return;
-    };
+    // let filename = PathBuf::from_str(args.paths[0].as_str()).unwrap();
+    // if !exists(&filename) {
+    //     return;
+    // };
+
+    let filename = PathBuf::from_str("../../examples/css/index.css").unwrap();
 
     let content = read(filename).unwrap();
 
@@ -42,5 +46,9 @@ fn main() {
 
     cssorder::parser::css::run(&mut ast);
 
-    println!("{:#?}", ast);
+    let mut code_gen = CodeGenerator {};
+    code_gen.emit(&mut ast);
+    // code_gen.emit_stylesheet(node)
+    // code_gen.emit(&mut ast);
+    // println!("{:#?}", ast);
 }
