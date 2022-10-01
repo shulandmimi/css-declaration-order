@@ -1,6 +1,6 @@
 use quote::quote;
 
-use syn::{Block, FnArg, ImplItemMethod, Type, TypeReference, __private::ToTokens};
+use syn::{Block, FnArg, ImplItemMethod, Type, TypeReference};
 
 #[proc_macro_attribute]
 pub fn emitter(
@@ -41,10 +41,9 @@ fn expand(i: ImplItemMethod) -> ImplItemMethod {
 
     let block = i.block;
 
-    println!("{}", block.to_token_stream().to_string());
     let item = quote! {
         {
-            impl crate::Emit<#node_type> for crate::CodeGenerator {
+            impl<W> crate::Emit<#node_type> for crate::CodeGenerator<W> where W: crate::Writer {
                 fn emit(&mut self, node: &#node_type) -> crate::Result {
                     self.#method_name(node)
                 }

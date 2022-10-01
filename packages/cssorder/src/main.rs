@@ -1,15 +1,14 @@
 #![feature(fs_try_exists)]
 #![feature(is_some_with)]
 use std::{
-    fmt::Result,
     fs::{read, try_exists},
     path::PathBuf,
     str::FromStr,
 };
 
-use clap::{Parser, builder::PathBufValueParser};
+use clap::Parser;
 use raffia::{ast::Stylesheet, Syntax};
-use raffia_codegen::{CodeGenerator, Emit};
+use raffia_codegen::{CodeGenerator, Emit, Writer};
 
 #[derive(Parser)]
 #[clap(author, version, about)]
@@ -46,7 +45,12 @@ fn main() {
 
     cssorder::parser::css::run(&mut ast);
 
-    let mut code_gen = CodeGenerator {};
+    let mut stdout = std::io::stdout();
+
+    let mut writer = raffia_codegen::CssWriter::new(stdout);
+
+    let mut code_gen = CodeGenerator::new(writer);
+
     code_gen.emit(&mut ast);
     // code_gen.emit_stylesheet(node)
     // code_gen.emit(&mut ast);
