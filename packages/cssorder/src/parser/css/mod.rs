@@ -2,16 +2,23 @@ use raffia::ast::{
     Declaration, Ident, InterpolableIdent, QualifiedRule, SimpleBlock, Statement, Stylesheet,
 };
 use std::collections::HashMap;
-use std::{borrow::BorrowMut, iter::Map};
 
 struct Sorter {
-    // sheet: Stylesheet,
     weight_map: HashMap<String, isize>,
+    default_weight: isize,
+}
+
+pub struct Config {
+    pub weight_map: Option<HashMap<String, isize>>,
+    pub default_weight: Option<isize>,
 }
 
 impl Sorter {
-    fn new(weight_map: HashMap<String, isize>) -> Self {
-        Sorter { weight_map }
+    fn new(weight_map: HashMap<String, isize>, default_weight: isize) -> Self {
+        Sorter {
+            weight_map,
+            default_weight,
+        }
     }
 
     fn sheet<'a>(&self, sheet: &mut Stylesheet<'a>) {
@@ -31,7 +38,7 @@ impl Sorter {
             let a = self.declaration(a.as_declaration().unwrap());
             let b = self.declaration(b.as_declaration().unwrap());
 
-            return a.cmp(&b);
+            return b.cmp(&a);
         });
     }
 
@@ -44,7 +51,7 @@ impl Sorter {
             return self.weight_map.get(name).unwrap().clone();
         }
 
-        return 1;
+        return self.default_weight.clone();
     }
 
     fn ident(&self, ident: &Ident) -> String {
@@ -52,10 +59,19 @@ impl Sorter {
     }
 }
 
-pub fn run(ast: &mut Stylesheet) {
+pub fn run(ast: &mut Stylesheet, config: Config) {
     let mut map = HashMap::new();
-    map.insert("width".to_string(), 0);
-    let sorter = Sorter::new(map);
+    let mut weight = 0;
+
+    if let Some(weight_map) = config.weight_map {
+        map.extend(weight_map);
+    }
+
+    if let Some(default_weight) = config.default_weight {
+        weight = default_weight;
+    }
+
+    let sorter = Sorter::new(map, weight);
 
     sorter.sheet(ast);
 }

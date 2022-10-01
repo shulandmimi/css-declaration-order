@@ -1,12 +1,14 @@
 #![feature(fs_try_exists)]
 #![feature(is_some_with)]
 use std::{
+    collections::HashMap,
     fs::{read, try_exists},
     path::PathBuf,
     str::FromStr,
 };
 
 use clap::Parser;
+use cssorder::parser::css::Config;
 use raffia::{ast::Stylesheet, Syntax};
 use raffia_codegen::{CodeGenerator, Emit};
 
@@ -43,7 +45,18 @@ fn main() {
 
     let mut ast = parser.parse::<Stylesheet>().unwrap();
 
-    cssorder::parser::css::run(&mut ast);
+    let mut key_weight_map = HashMap::new();
+
+    key_weight_map.insert("width".to_string(), 2000);
+    key_weight_map.insert("height".to_string(), 1999);
+
+    cssorder::parser::css::run(
+        &mut ast,
+        Config {
+            weight_map: Some(key_weight_map),
+            default_weight: Some(1000),
+        },
+    );
 
     let stdout = std::io::stdout();
 
