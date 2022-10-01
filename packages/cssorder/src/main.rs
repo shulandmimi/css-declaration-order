@@ -8,7 +8,7 @@ use std::{
 
 use clap::Parser;
 use raffia::{ast::Stylesheet, Syntax};
-use raffia_codegen::{CodeGenerator, Emit, Writer};
+use raffia_codegen::{CodeGenerator, Emit};
 
 #[derive(Parser)]
 #[clap(author, version, about)]
@@ -45,14 +45,11 @@ fn main() {
 
     cssorder::parser::css::run(&mut ast);
 
-    let mut stdout = std::io::stdout();
+    let stdout = std::io::stdout();
 
-    let mut writer = raffia_codegen::CssWriter::new(stdout);
+    let writer = raffia_codegen::CssWriter::new(stdout);
 
     let mut code_gen = CodeGenerator::new(writer);
 
-    code_gen.emit(&mut ast);
-    // code_gen.emit_stylesheet(node)
-    // code_gen.emit(&mut ast);
-    // println!("{:#?}", ast);
+    code_gen.emit(&mut ast).unwrap();
 }

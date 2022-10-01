@@ -5,9 +5,9 @@ pub use std::fmt::Result;
 
 use codegen_macro::emitter;
 use raffia::ast::{
-    ClassSelector, ComplexSelector, ComplexSelectorChild, CompoundSelector, Declaration,
-    IdSelector, Ident, InterpolableIdent, QualifiedRule, SelectorList, SimpleBlock, SimpleSelector,
-    Statement, Stylesheet,
+    ClassSelector, ComplexSelector, ComplexSelectorChild, ComponentValue, CompoundSelector,
+    Declaration, Dimension, Function, IdSelector, Ident, InterpolableIdent, Length, QualifiedRule,
+    SelectorList, SimpleBlock, SimpleSelector, Statement, Stylesheet,
 };
 
 mod emit;
@@ -45,7 +45,7 @@ where
     pub fn emit_statements(&mut self, node: &Statement<'_>) -> crate::Result {
         match node {
             Statement::AtRule(_) => todo!(),
-            Statement::Declaration(_) => todo!(),
+            Statement::Declaration(declaration) => emit!(self, declaration),
             Statement::KeyframeBlock(_) => todo!(),
             Statement::LessVariableDeclaration(_) => todo!(),
             Statement::QualifiedRule(rule) => emit!(self, rule),
@@ -87,6 +87,9 @@ where
         Self: Emit<Elem>,
     {
         for (idx, node) in nodes.iter().enumerate() {
+            if idx != 0 {
+                self.writer.write_raw(",".to_string())?;
+            }
             emit!(self, node);
         }
 
@@ -141,14 +144,67 @@ where
 
     #[emitter]
     pub fn emit_simple_block(&mut self, rule: &SimpleBlock<'_>) -> crate::Result {
+        self.writer.write_raw("{".to_string())?;
         self.emit_list(rule.statements[..].into())?;
+        self.writer.write_raw("}".to_string())?;
     }
 
     #[emitter]
     pub fn emit_declaration(&mut self, declar: &Declaration<'_>) -> crate::Result {
         emit!(self, declar.name);
-        // emit!(self, declar.value);
-        // emit!(self, declar.important);
+        self.writer.write_raw(":".to_string())?;
+        self.emit_list(declar.value[..].into())?;
+    }
+
+    #[emitter]
+    pub fn emit_component_value(&mut self, component_val: &ComponentValue<'_>) -> crate::Result {
+        match component_val {
+            ComponentValue::BracketBlock(_) => todo!(),
+            ComponentValue::Calc(_) => todo!(),
+            ComponentValue::Delimiter(_) => todo!(),
+            ComponentValue::Dimension(dimension) => emit!(self, dimension),
+            ComponentValue::Function(fun) => todo!(),
+            ComponentValue::HexColor(_) => todo!(),
+            ComponentValue::IdSelector(_) => todo!(),
+            ComponentValue::InterpolableIdent(ident) => emit!(self, ident),
+            ComponentValue::InterpolableStr(_) => todo!(),
+            ComponentValue::LayerName(_) => todo!(),
+            ComponentValue::LessVariable(_) => todo!(),
+            ComponentValue::LessVariableVariable(_) => todo!(),
+            ComponentValue::Number(_) => todo!(),
+            ComponentValue::Percentage(_) => todo!(),
+            ComponentValue::Ratio(_) => todo!(),
+            ComponentValue::SassBinaryExpression(_) => todo!(),
+            ComponentValue::SassMap(_) => todo!(),
+            ComponentValue::SassNamespacedExpression(_) => todo!(),
+            ComponentValue::SassNestingDeclaration(_) => todo!(),
+            ComponentValue::SassParenthesizedExpression(_) => todo!(),
+            ComponentValue::SassParentSelector(_) => todo!(),
+            ComponentValue::SassUnaryExpression(_) => todo!(),
+            ComponentValue::SassVariable(_) => todo!(),
+            ComponentValue::TokenWithSpan(_) => todo!(),
+            ComponentValue::UnicodeRange(_) => todo!(),
+            ComponentValue::Url(_) => todo!(),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_dimension(&mut self, dimension: &Dimension<'_>) -> crate::Result {
+        match dimension {
+            Dimension::Length(len) => emit!(self, len),
+            Dimension::Angle(_) => todo!(),
+            Dimension::Duration(_) => todo!(),
+            Dimension::Frequency(_) => todo!(),
+            Dimension::Resolution(_) => todo!(),
+            Dimension::Flex(_) => todo!(),
+            Dimension::Unknown(_) => todo!(),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_length(&mut self, length: &Length<'_>) -> crate::Result {
+        self.writer.write_raw(String::from(length.value.raw))?;
+        emit!(self, length.unit);
     }
 
     #[emitter]
