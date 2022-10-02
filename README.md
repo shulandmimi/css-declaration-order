@@ -1,17 +1,15 @@
 # CSS-Declaration-Order
 
-
 <div>
 
 [![MIT licensed][mit-badge]][mit-url]
-
 
 [mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg?color=brightgreen
 [mit-url]: LICENSE
 
 </div>
 
-`css/less/scss/sass` declaration order CLI baseon on raffia
+`css/less/scss/sass` declaration order CLI based on raffia
 
 ## features
 
