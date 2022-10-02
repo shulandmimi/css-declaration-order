@@ -1,10 +1,10 @@
-use std::borrow::Cow;
-
+#[derive(Clone, Copy)]
 pub enum Sep {
     BlockLeft,
     BlockRight,
     SimpleElement,
     Element,
+    Empty,
 }
 
 pub trait SepSerialize {

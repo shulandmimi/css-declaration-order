@@ -8,12 +8,19 @@ macro_rules! emit {
 
 macro_rules! serialize {
     ($s:expr, $t:expr) => {{
-        let raw = $s.serialize.translate($t);
+        let res = $s.serialize.translate($t);
 
-        if let Some(val) = raw {
-            val
-        } else {
-            String::from("")
+        res
+    }};
+}
+
+macro_rules! write_raw {
+    ($s:expr, $t:expr) => {{
+        let m = $t;
+        if m.is_some() {
+            $s.writer.write_raw(m.unwrap())
+        }else {
+            Ok(())
         }
     }};
 }

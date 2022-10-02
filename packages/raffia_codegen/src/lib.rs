@@ -47,7 +47,7 @@ where
 
     #[emitter]
     pub fn emit_stylesheet(&mut self, node: &Stylesheet<'_>) -> crate::Result {
-        self.emit_list(node.statements[..].into())?;
+        self.emit_list(node.statements[..].into(), Sep::Empty)?;
     }
 
     #[emitter]
@@ -88,17 +88,18 @@ where
 
     #[emitter]
     pub fn emit_selector_list(&mut self, rule: &SelectorList<'_>) -> crate::Result {
-        self.emit_list(rule.selectors[..].into())?;
+        self.emit_list(rule.selectors[..].into(), Sep::SimpleElement)?;
     }
 
-    fn emit_list<Elem>(&mut self, nodes: &[Elem]) -> crate::Result
+    fn emit_list<Elem>(&mut self, nodes: &[Elem], sep: Sep) -> crate::Result
     where
         Self: Emit<Elem>,
     {
         for (idx, node) in nodes.iter().enumerate() {
             if idx != 0 {
-                self.writer.write_raw(",".to_string())?;
+                write_raw!(self, serialize!(self, sep))?;
             }
+
             emit!(self, node);
         }
 
@@ -107,7 +108,7 @@ where
 
     #[emitter]
     pub fn emit_complex_selector(&mut self, selector: &ComplexSelector<'_>) -> crate::Result {
-        self.emit_list(selector.children[..].into())?;
+        self.emit_list(selector.children[..].into(), Sep::Empty)?;
     }
 
     #[emitter]
@@ -122,7 +123,7 @@ where
 
     #[emitter]
     pub fn emit_compound_selector(&mut self, selector: &CompoundSelector<'_>) -> crate::Result {
-        self.emit_list(selector.children[..].into())?;
+        self.emit_list(selector.children[..].into(), Sep::Empty)?;
     }
 
     #[emitter]
@@ -153,18 +154,16 @@ where
 
     #[emitter]
     pub fn emit_simple_block(&mut self, rule: &SimpleBlock<'_>) -> crate::Result {
-        self.writer.write_raw("{".to_string())?;
-
-        self.writer.write_raw(serialize!(self, Sep::BlockLeft))?;
-        self.emit_list(rule.statements[..].into())?;
-        self.writer.write_raw(serialize!(self, Sep::BlockRight))?;
+        write_raw!(self, serialize!(self, Sep::BlockLeft))?;
+        self.emit_list(rule.statements[..].into(), Sep::SimpleElement)?;
+        write_raw!(self, serialize!(self, Sep::BlockRight))?;
     }
 
     #[emitter]
     pub fn emit_declaration(&mut self, declar: &Declaration<'_>) -> crate::Result {
         emit!(self, declar.name);
         self.writer.write_raw(":".to_string())?;
-        self.emit_list(declar.value[..].into())?;
+        self.emit_list(declar.value[..].into(), Sep::Empty)?;
     }
 
     #[emitter]

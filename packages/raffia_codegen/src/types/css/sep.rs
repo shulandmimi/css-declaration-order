@@ -9,6 +9,7 @@ impl SepSerialize for CssSep {
             Sep::BlockRight => Some(String::from("}")),
             Sep::SimpleElement => Some(String::from(",")),
             Sep::Element => Some(String::from(",")),
+            Sep::Empty => None
         }
     }
 }
