@@ -24,18 +24,18 @@ fn exists(path: &PathBuf) -> bool {
 }
 
 fn main() {
-    // let args = Cli::parse();
+    let args = Cli::parse();
 
-    // if args.paths.len() == 0 {
-    //     return;
-    // }
+    if args.paths.len() == 0 {
+        return;
+    }
 
-    // let filename = PathBuf::from_str(args.paths[0].as_str()).unwrap();
-    // if !exists(&filename) {
-    //     return;
-    // };
+    let filename = PathBuf::from_str(args.paths[0].as_str()).unwrap();
+    if !exists(&filename) {
+        return;
+    };
 
-    let filename = PathBuf::from_str("../../examples/css/index.css").unwrap();
+    // let filename = PathBuf::from_str("../../examples/css/index.css").unwrap();
 
     let content = read(filename).unwrap();
 

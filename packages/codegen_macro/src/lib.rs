@@ -19,7 +19,7 @@ fn expand(i: ImplItemMethod) -> ImplItemMethod {
 
     assert!(
         method_name.to_string().starts_with("emit_"),
-        "emitter need emit_prefix but got {}",
+        "emitter need emit_ prefix but got {}",
         method_name
     );
 
