@@ -312,7 +312,7 @@ where
             Token::ColonColon(_) => todo!(),
             Token::Comma(comma) => emit!(self, comma),
             Token::Dedent(_) => todo!(),
-            Token::Dimension(_) => todo!(),
+            Token::Dimension(dimension) => emit!(self, dimension),
             Token::DollarEqual(_) => todo!(),
             Token::DollarVar(_) => todo!(),
             Token::Dot(_) => todo!(),
@@ -332,7 +332,7 @@ where
             Token::LessThan(_) => todo!(),
             Token::LessThanEqual(_) => todo!(),
             Token::Linebreak(_) => todo!(),
-            Token::LParen(_) => todo!(),
+            Token::LParen(lparen) => emit!(self, lparen),
             Token::Minus(_) => todo!(),
             Token::Number(number) => emit!(self, number),
             Token::NumberSign(_) => todo!(),
@@ -343,7 +343,7 @@ where
             Token::Question(_) => todo!(),
             Token::RBrace(_) => todo!(),
             Token::RBracket(_) => todo!(),
-            Token::RParen(_) => todo!(),
+            Token::RParen(rparen) => emit!(self, rparen),
             Token::Semicolon(_) => todo!(),
             Token::Solidus(_) => todo!(),
             Token::Str(str) => emit!(self, str),
@@ -353,6 +353,21 @@ where
             Token::UrlRaw(_) => todo!(),
             Token::UrlTemplate(_) => todo!(),
         }
+    }
+
+    #[emitter]
+    pub fn emit_token_lparen(&mut self, _lparen: &token::LParen) -> crate::Result {
+        write_raw!(self, Some("(".to_string()))?;
+    }
+    #[emitter]
+    pub fn emit_token_rparen(&mut self, _rparen: &token::RParen) -> crate::Result {
+        write_raw!(self, Some(")".to_string()))?;
+    }
+
+    #[emitter]
+    pub fn emit_token_dimension(&mut self, dimension: &token::Dimension<'_>) -> crate::Result {
+        emit!(self, dimension.value);
+        emit!(self, dimension.unit);
     }
 
     #[emitter]
