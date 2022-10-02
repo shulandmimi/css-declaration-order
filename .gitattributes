@@ -1,2 +1,2 @@
-*.css   linguist-generated=false
+*.css   linguist-generated=true
 *.rs    eol=lf
