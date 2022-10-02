@@ -25,8 +25,8 @@ macro_rules! write_last {
 }
 
 macro_rules! new_line {
-    ($s:expr) => {{
-        $s.writer.write_raw("\n".into())
+    ($s:expr, $t:expr) => {{
+        write_raw!($s, $s.serialize.new_line($t))?;
     }};
 }
 

@@ -15,9 +15,9 @@ mod sep;
 mod types;
 mod writer;
 
-use crate::sep::Sep;
+use crate::sep::SepRule;
 pub use emit::Emit;
-use sep::SepSerialize;
+use sep::{FormatSep, SepSerialize};
 pub use types::css::{sep::CssSep, CssWriter::CssWriter};
 pub use writer::Writer;
 
@@ -27,7 +27,7 @@ mod macros;
 pub struct CodeGenerator<W, S>
 where
     W: Writer,
-    S: SepSerialize,
+    S: SepSerialize<SepRule> + SepSerialize<FormatSep>,
 {
     writer: W,
     serialize: S,
@@ -36,7 +36,7 @@ where
 impl<W, S> CodeGenerator<W, S>
 where
     W: Writer,
-    S: SepSerialize,
+    S: SepSerialize<SepRule> + SepSerialize<FormatSep>,
 {
     pub fn new(write: W, serialize: S) -> Self {
         CodeGenerator {
@@ -47,7 +47,7 @@ where
 
     #[emitter]
     pub fn emit_stylesheet(&mut self, node: &Stylesheet<'_>) -> crate::Result {
-        self.emit_list(node.statements[..].into(), Sep::Empty)?;
+        self.emit_list(node.statements[..].into(), FormatSep::MUTIPLE_LINE)?;
     }
 
     #[emitter]
@@ -88,28 +88,39 @@ where
 
     #[emitter]
     pub fn emit_selector_list(&mut self, rule: &SelectorList<'_>) -> crate::Result {
-        self.emit_list(rule.selectors[..].into(), Sep::SimpleElement)?;
+        self.emit_list(
+            rule.selectors[..].into(),
+            FormatSep::COMMA | FormatSep::SINGLE_LINE,
+        )?;
     }
 
-    fn emit_list<Elem>(&mut self, nodes: &[Elem], sep: Sep) -> crate::Result
+    fn emit_list<Elem>(&mut self, nodes: &[Elem], sep: FormatSep) -> crate::Result
     where
         Self: Emit<Elem>,
     {
+        let end = nodes.len();
+        new_line!(self, sep);
         for (idx, node) in nodes.iter().enumerate() {
-            if idx != 0 {
-                write_raw!(self, translate!(self, sep))?;
-            }
             emit!(self, node);
-        }
 
-        write_raw!(self, write_last!(self, sep))?;
+            if idx != end - 1 {
+                write_raw!(self, translate!(self, sep))?;
+            } else {
+                write_raw!(self, write_last!(self, sep))?;
+            }
+
+            new_line!(self, sep)
+        }
 
         Ok(())
     }
 
     #[emitter]
     pub fn emit_complex_selector(&mut self, selector: &ComplexSelector<'_>) -> crate::Result {
-        self.emit_list(selector.children[..].into(), Sep::Empty)?;
+        self.emit_list(
+            selector.children[..].into(),
+            FormatSep::SPACE | FormatSep::SINGLE_LINE,
+        )?;
     }
 
     #[emitter]
@@ -124,7 +135,10 @@ where
 
     #[emitter]
     pub fn emit_compound_selector(&mut self, selector: &CompoundSelector<'_>) -> crate::Result {
-        self.emit_list(selector.children[..].into(), Sep::Empty)?;
+        self.emit_list(
+            selector.children[..].into(),
+            FormatSep::NONE | FormatSep::SINGLE_LINE,
+        )?;
     }
 
     #[emitter]
@@ -155,16 +169,22 @@ where
 
     #[emitter]
     pub fn emit_simple_block(&mut self, rule: &SimpleBlock<'_>) -> crate::Result {
-        write_raw!(self, translate!(self, Sep::BlockLeft))?;
-        self.emit_list(rule.statements[..].into(), Sep::Declarations)?;
-        write_raw!(self, translate!(self, Sep::BlockRight))?;
+        write_raw!(self, translate!(self, SepRule::BlockLeft))?;
+        self.emit_list(
+            rule.statements[..].into(),
+            FormatSep::SEMICOLON | FormatSep::MUTIPLE_LINE,
+        )?;
+        write_raw!(self, translate!(self, SepRule::BlockRight))?;
     }
 
     #[emitter]
     pub fn emit_declaration(&mut self, declar: &Declaration<'_>) -> crate::Result {
         emit!(self, declar.name);
         self.writer.write_raw(":".to_string())?;
-        self.emit_list(declar.value[..].into(), Sep::Space)?;
+        self.emit_list(
+            declar.value[..].into(),
+            FormatSep::SPACE | FormatSep::SINGLE_LINE,
+        )?;
     }
 
     #[emitter]
@@ -239,3 +259,27 @@ where
         self.writer.write_raw(literal.raw.to_string())?;
     }
 }
+
+trait EmitList<T> {
+    fn emit_list<Elem>(&mut self, node: &[Elem], sep: T) -> crate::Result;
+}
+
+// impl<W, S> EmitList<SepRule> for CodeGenerator<W, S>
+// where
+//     W: Writer,
+//     S: SepSerialize<SepRule> + SepSerialize<FormatSep>,
+// {
+//     fn emit_list<Elem>(&mut self, node: &[Elem], sep: SepRule) -> crate::Result {
+//         todo!()
+//     }
+// }
+
+// impl<W, S> EmitList<FormatSep> for CodeGenerator<W, S>
+// where
+//     W: Writer,
+//     S: SepSerialize<SepRule> + SepSerialize<FormatSep>,
+// {
+//     fn emit_list<Elem>(&mut self, node: &[Elem], sep: FormatSep) -> crate::Result {
+//         todo!()
+//     }
+// }
