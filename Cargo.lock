@@ -274,6 +274,7 @@ dependencies = [
 name = "raffia_codegen"
 version = "0.1.0"
 dependencies = [
+ "bitflags",
  "clippy",
  "codegen_macro",
  "raffia",

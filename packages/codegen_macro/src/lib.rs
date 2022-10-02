@@ -43,7 +43,7 @@ fn expand(i: ImplItemMethod) -> ImplItemMethod {
 
     let item = quote! {
         {
-            impl<W, S> crate::Emit<#node_type> for crate::CodeGenerator<W, S> where W: crate::Writer, S: crate::SepSerialize {
+            impl<W, S> crate::Emit<#node_type> for crate::CodeGenerator<W, S> where W: crate::Writer, S: crate::SepSerialize<SepRule> + crate::SepSerialize<FormatSep> {
                 fn emit(&mut self, node: &#node_type) -> crate::Result {
                     self.#method_name(node)
                 }
