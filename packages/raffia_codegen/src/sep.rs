@@ -17,8 +17,11 @@ bitflags! {
         const LINE = Self::SINGLE_LINE.bits | Self::MUTIPLE_LINE.bits;
 
         // Delimiters
+        /// " "
         const SPACE = 1 << 2;
+        /// ;
         const SEMICOLON = 1 << 3;
+        /// ,
         const COMMA = 1 << 4;
         const DELIMITER = Self::SPACE.bits | Self::SEMICOLON.bits | Self::COMMA.bits;
     }

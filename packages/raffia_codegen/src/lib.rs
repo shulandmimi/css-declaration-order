@@ -4,10 +4,14 @@
 pub use std::fmt::Result;
 
 use codegen_macro::emitter;
-use raffia::ast::{
-    ClassSelector, ComplexSelector, ComplexSelectorChild, ComponentValue, CompoundSelector,
-    Declaration, Dimension, Duration, Function, IdSelector, Ident, InterpolableIdent, Length,
-    QualifiedRule, SelectorList, SimpleBlock, SimpleSelector, Statement, Stylesheet,
+use raffia::{
+    ast::{
+        AtRule, AtRulePrelude, ClassSelector, ComplexSelector, ComplexSelectorChild,
+        ComponentValue, CompoundSelector, Declaration, Dimension, Duration, Function, IdSelector,
+        Ident, InterpolableIdent, Length, PseudoClassSelector, PseudoClassSelectorArg,
+        QualifiedRule, SelectorList, SimpleBlock, SimpleSelector, Statement, Str, Stylesheet,
+    },
+    token::{self, Comma, Hash, Number, Token, TokenWithSpan},
 };
 
 mod emit;
@@ -53,7 +57,7 @@ where
     #[emitter]
     pub fn emit_statements(&mut self, node: &Statement<'_>) -> crate::Result {
         match node {
-            Statement::AtRule(_) => todo!(),
+            Statement::AtRule(rule) => emit!(self, rule),
             Statement::Declaration(declaration) => emit!(self, declaration),
             Statement::KeyframeBlock(_) => todo!(),
             Statement::LessVariableDeclaration(_) => todo!(),
@@ -78,6 +82,45 @@ where
         };
 
         return Ok(());
+    }
+
+    #[emitter]
+    pub fn emit_at_rule(&mut self, at_rule: &AtRule<'_>) -> crate::Result {
+        emit!(self, at_rule.name);
+        write_raw!(self, Some(":".to_string()))?;
+        emit!(self, at_rule.prelude);
+        emit!(self, at_rule.block);
+    }
+
+    #[emitter]
+    pub fn emit_prelude(&mut self, prelude: &AtRulePrelude<'_>) -> crate::Result {
+        match prelude {
+            AtRulePrelude::Charset(v) => emit!(self, v),
+            AtRulePrelude::ColorProfile(v) => todo!(),
+            AtRulePrelude::Container(_) => todo!(),
+            AtRulePrelude::CounterStyle(_) => todo!(),
+            AtRulePrelude::CustomMedia(_) => todo!(),
+            AtRulePrelude::Document(_) => todo!(),
+            AtRulePrelude::FontFeatureValues(_) => todo!(),
+            AtRulePrelude::FontPaletteValues(_) => todo!(),
+            AtRulePrelude::Import(_) => todo!(),
+            AtRulePrelude::Keyframes(_) => todo!(),
+            AtRulePrelude::Layer(_) => todo!(),
+            AtRulePrelude::Media(_) => todo!(),
+            AtRulePrelude::Namespace(_) => todo!(),
+            AtRulePrelude::Nest(_) => todo!(),
+            AtRulePrelude::Page(_) => todo!(),
+            AtRulePrelude::PositionFallback(_) => todo!(),
+            AtRulePrelude::Property(_) => todo!(),
+            AtRulePrelude::ScrollTimeline(_) => todo!(),
+            AtRulePrelude::Supports(_) => todo!(),
+            AtRulePrelude::Unknown(_) => todo!(),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_str(&mut self, str: &Str<'_>) -> crate::Result {
+        write_raw!(self, Some(str.raw.to_string()))?;
     }
 
     #[emitter]
@@ -148,10 +191,34 @@ where
             SimpleSelector::Id(id) => emit!(self, id),
             SimpleSelector::Type(_) => todo!(),
             SimpleSelector::Attribute(_) => todo!(),
-            SimpleSelector::PseudoClass(_) => todo!(),
+            SimpleSelector::PseudoClass(pseudo) => emit!(self, pseudo),
             SimpleSelector::PseudoElement(_) => todo!(),
             SimpleSelector::Nesting(_) => todo!(),
             SimpleSelector::SassPlaceholder(_) => todo!(),
+        }
+    }
+    #[emitter]
+    pub fn emit_pseudo_class(&mut self, pseudo: &PseudoClassSelector<'_>) -> crate::Result {
+        emit!(self, pseudo.name);
+        emit!(self, pseudo.arg);
+    }
+
+    #[emitter]
+    pub fn emit_pseudo_class_selector_arg(
+        &mut self,
+        pseudo: &PseudoClassSelectorArg<'_>,
+    ) -> crate::Result {
+        println!("{:?}", pseudo);
+        match pseudo {
+            PseudoClassSelectorArg::CompoundSelector(_) => todo!(),
+            PseudoClassSelectorArg::CompoundSelectorList(_) => todo!(),
+            PseudoClassSelectorArg::Ident(_) => todo!(),
+            PseudoClassSelectorArg::LanguageRangeList(_) => todo!(),
+            PseudoClassSelectorArg::Nth(_) => todo!(),
+            PseudoClassSelectorArg::Number(_) => todo!(),
+            PseudoClassSelectorArg::RelativeSelectorList(_) => todo!(),
+            PseudoClassSelectorArg::SelectorList(_) => todo!(),
+            PseudoClassSelectorArg::TokenSeq(_) => todo!(),
         }
     }
 
@@ -213,10 +280,99 @@ where
             ComponentValue::SassParentSelector(_) => todo!(),
             ComponentValue::SassUnaryExpression(_) => todo!(),
             ComponentValue::SassVariable(_) => todo!(),
-            ComponentValue::TokenWithSpan(_) => todo!(),
+            ComponentValue::TokenWithSpan(token) => emit!(self, token),
             ComponentValue::UnicodeRange(_) => todo!(),
             ComponentValue::Url(_) => todo!(),
         }
+    }
+
+    #[emitter]
+    pub fn emit_token_with_span(&mut self, token_with_span: &TokenWithSpan<'_>) -> crate::Result {
+        emit!(self, token_with_span.token);
+    }
+
+    #[emitter]
+    pub fn emit_token(&mut self, token: &Token<'_>) -> crate::Result {
+        match token {
+            Token::Eof(_) => todo!(),
+            Token::Ampersand(_) => todo!(),
+            Token::Asterisk(_) => todo!(),
+            Token::AsteriskEqual(_) => todo!(),
+            Token::At(_) => todo!(),
+            Token::AtKeyword(_) => todo!(),
+            Token::AtLBraceVar(_) => todo!(),
+            Token::BadStr(_) => todo!(),
+            Token::Bar(_) => todo!(),
+            Token::BarBar(_) => todo!(),
+            Token::BarEqual(_) => todo!(),
+            Token::CaretEqual(_) => todo!(),
+            Token::Cdc(_) => todo!(),
+            Token::Cdo(_) => todo!(),
+            Token::Colon(_) => todo!(),
+            Token::ColonColon(_) => todo!(),
+            Token::Comma(comma) => emit!(self, comma),
+            Token::Dedent(_) => todo!(),
+            Token::Dimension(_) => todo!(),
+            Token::DollarEqual(_) => todo!(),
+            Token::DollarVar(_) => todo!(),
+            Token::Dot(_) => todo!(),
+            Token::DotDotDot(_) => todo!(),
+            Token::Equal(_) => todo!(),
+            Token::EqualEqual(_) => todo!(),
+            Token::Exclamation(_) => todo!(),
+            Token::ExclamationEqual(_) => todo!(),
+            Token::GreaterThan(_) => todo!(),
+            Token::GreaterThanEqual(_) => todo!(),
+            Token::Hash(hash) => emit!(self, hash),
+            Token::HashLBrace(_) => todo!(),
+            Token::Ident(ident) => emit!(self, ident),
+            Token::Indent(_) => todo!(),
+            Token::LBrace(_) => todo!(),
+            Token::LBracket(_) => todo!(),
+            Token::LessThan(_) => todo!(),
+            Token::LessThanEqual(_) => todo!(),
+            Token::Linebreak(_) => todo!(),
+            Token::LParen(_) => todo!(),
+            Token::Minus(_) => todo!(),
+            Token::Number(number) => emit!(self, number),
+            Token::NumberSign(_) => todo!(),
+            Token::Percent(_) => todo!(),
+            Token::Percentage(_) => todo!(),
+            Token::Plus(_) => todo!(),
+            Token::PlusUnderscore(_) => todo!(),
+            Token::Question(_) => todo!(),
+            Token::RBrace(_) => todo!(),
+            Token::RBracket(_) => todo!(),
+            Token::RParen(_) => todo!(),
+            Token::Semicolon(_) => todo!(),
+            Token::Solidus(_) => todo!(),
+            Token::Str(str) => emit!(self, str),
+            Token::StrTemplate(_) => todo!(),
+            Token::Tilde(_) => todo!(),
+            Token::TildeEqual(_) => todo!(),
+            Token::UrlRaw(_) => todo!(),
+            Token::UrlTemplate(_) => todo!(),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_hash(&mut self, hash: &Hash<'_>) -> crate::Result {
+        write_raw!(self, Some(format!("#{}", hash.raw)))?;
+    }
+
+    #[emitter]
+    pub fn emit_number(&mut self, number: &Number<'_>) -> crate::Result {
+        write_raw!(self, Some(number.raw.to_string()))?;
+    }
+
+    #[emitter]
+    pub fn emit_comma(&mut self, _comma: &Comma) -> crate::Result {
+        write_raw!(self, Some(",".to_string()))?;
+    }
+
+    #[emitter]
+    pub fn emit_ident(&mut self, ident: &token::Ident<'_>) -> crate::Result {
+        write_raw!(self, Some(ident.raw.to_string()))?;
     }
 
     #[emitter]
@@ -230,6 +386,11 @@ where
             Dimension::Flex(_) => todo!(),
             Dimension::Unknown(_) => todo!(),
         }
+    }
+
+    #[emitter]
+    pub fn emit_token_str(&mut self, str: &token::Str<'_>) -> crate::Result {
+        write_raw!(self, Some(str.raw.to_string()))?;
     }
 
     #[emitter]

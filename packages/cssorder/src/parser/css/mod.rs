@@ -23,9 +23,10 @@ impl Sorter {
 
     fn sheet<'a>(&self, sheet: &mut Stylesheet<'a>) {
         sheet.statements.iter_mut().for_each(|mut stat| {
-            let mut t = stat.as_qualified_rule().unwrap().clone();
-            self.qualified_rule(&mut t);
-            *stat = Statement::QualifiedRule(t);
+            match stat {
+                Statement::QualifiedRule(rule) => self.qualified_rule(rule),
+                _ => (),
+            };
         });
     }
 
