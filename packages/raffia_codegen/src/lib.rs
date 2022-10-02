@@ -11,29 +11,38 @@ use raffia::ast::{
 };
 
 mod emit;
+mod sep;
 mod types;
 mod writer;
 
+use crate::sep::Sep;
 pub use emit::Emit;
-pub use types::css::CssWriter::CssWriter;
+use sep::SepSerialize;
+pub use types::css::{sep::CssSep, CssWriter::CssWriter};
 pub use writer::Writer;
 
 #[macro_use]
 mod macros;
 
-pub struct CodeGenerator<W>
+pub struct CodeGenerator<W, S>
 where
     W: Writer,
+    S: SepSerialize,
 {
     writer: W,
+    serialize: S,
 }
 
-impl<W> CodeGenerator<W>
+impl<W, S> CodeGenerator<W, S>
 where
     W: Writer,
+    S: SepSerialize,
 {
-    pub fn new(write: W) -> Self {
-        CodeGenerator { writer: write }
+    pub fn new(write: W, serialize: S) -> Self {
+        CodeGenerator {
+            writer: write,
+            serialize,
+        }
     }
 
     #[emitter]
@@ -145,8 +154,10 @@ where
     #[emitter]
     pub fn emit_simple_block(&mut self, rule: &SimpleBlock<'_>) -> crate::Result {
         self.writer.write_raw("{".to_string())?;
+
+        self.writer.write_raw(serialize!(self, Sep::BlockLeft))?;
         self.emit_list(rule.statements[..].into())?;
-        self.writer.write_raw("}".to_string())?;
+        self.writer.write_raw(serialize!(self, Sep::BlockRight))?;
     }
 
     #[emitter]

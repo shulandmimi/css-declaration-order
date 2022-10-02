@@ -62,7 +62,9 @@ fn main() {
 
     let writer = raffia_codegen::CssWriter::new(stdout);
 
-    let mut code_gen = CodeGenerator::new(writer);
+    let css_serialize = raffia_codegen::CssSep::new();
+
+    let mut code_gen = CodeGenerator::new(writer, css_serialize);
 
     code_gen.emit(&mut ast).unwrap();
 }
