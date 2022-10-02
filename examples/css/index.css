@@ -7,4 +7,5 @@
     margin-left: 10px;
     height: 900px;
     width: 10px;
+    transition: all 2s linear;
 }

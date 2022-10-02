@@ -6,8 +6,8 @@ pub use std::fmt::Result;
 use codegen_macro::emitter;
 use raffia::ast::{
     ClassSelector, ComplexSelector, ComplexSelectorChild, ComponentValue, CompoundSelector,
-    Declaration, Dimension, Function, IdSelector, Ident, InterpolableIdent, Length, QualifiedRule,
-    SelectorList, SimpleBlock, SimpleSelector, Statement, Stylesheet,
+    Declaration, Dimension, Duration, Function, IdSelector, Ident, InterpolableIdent, Length,
+    QualifiedRule, SelectorList, SimpleBlock, SimpleSelector, Statement, Stylesheet,
 };
 
 mod emit;
@@ -97,11 +97,12 @@ where
     {
         for (idx, node) in nodes.iter().enumerate() {
             if idx != 0 {
-                write_raw!(self, serialize!(self, sep))?;
+                write_raw!(self, translate!(self, sep))?;
             }
-
             emit!(self, node);
         }
+
+        write_raw!(self, write_last!(self, sep))?;
 
         Ok(())
     }
@@ -154,16 +155,16 @@ where
 
     #[emitter]
     pub fn emit_simple_block(&mut self, rule: &SimpleBlock<'_>) -> crate::Result {
-        write_raw!(self, serialize!(self, Sep::BlockLeft))?;
-        self.emit_list(rule.statements[..].into(), Sep::SimpleElement)?;
-        write_raw!(self, serialize!(self, Sep::BlockRight))?;
+        write_raw!(self, translate!(self, Sep::BlockLeft))?;
+        self.emit_list(rule.statements[..].into(), Sep::Declarations)?;
+        write_raw!(self, translate!(self, Sep::BlockRight))?;
     }
 
     #[emitter]
     pub fn emit_declaration(&mut self, declar: &Declaration<'_>) -> crate::Result {
         emit!(self, declar.name);
         self.writer.write_raw(":".to_string())?;
-        self.emit_list(declar.value[..].into(), Sep::Empty)?;
+        self.emit_list(declar.value[..].into(), Sep::Space)?;
     }
 
     #[emitter]
@@ -203,7 +204,7 @@ where
         match dimension {
             Dimension::Length(len) => emit!(self, len),
             Dimension::Angle(_) => todo!(),
-            Dimension::Duration(_) => todo!(),
+            Dimension::Duration(duration) => emit!(self, duration),
             Dimension::Frequency(_) => todo!(),
             Dimension::Resolution(_) => todo!(),
             Dimension::Flex(_) => todo!(),
@@ -215,6 +216,12 @@ where
     pub fn emit_length(&mut self, length: &Length<'_>) -> crate::Result {
         self.writer.write_raw(String::from(length.value.raw))?;
         emit!(self, length.unit);
+    }
+
+    #[emitter]
+    pub fn emit_duration(&mut self, duration: &Duration<'_>) -> crate::Result {
+        self.writer.write_raw(duration.value.raw.to_string())?;
+        self.writer.write_raw(duration.unit.raw.to_string())?;
     }
 
     #[emitter]
