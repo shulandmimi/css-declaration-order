@@ -431,7 +431,7 @@ where
             ComponentValue::Calc(_) => todo!(),
             ComponentValue::Delimiter(_) => todo!(),
             ComponentValue::Dimension(dimension) => emit!(self, dimension),
-            ComponentValue::Function(fun) => todo!(),
+            ComponentValue::Function(fun) => emit!(self, fun),
             ComponentValue::HexColor(_) => todo!(),
             ComponentValue::IdSelector(_) => todo!(),
             ComponentValue::InterpolableIdent(ident) => emit!(self, ident),
@@ -454,6 +454,14 @@ where
             ComponentValue::UnicodeRange(_) => todo!(),
             ComponentValue::Url(_) => todo!(),
         }
+    }
+
+    #[emitter]
+    pub fn emit_function(&mut self, fun: &ast::Function<'_>) -> crate::Result {
+        emit!(self, fun.name);
+        write_str!(self, "(")?;
+        self.emit_list(fun.args[..].into(), FormatSep::COMMA)?;
+        write_str!(self, ")")?;
     }
 
     #[emitter]
