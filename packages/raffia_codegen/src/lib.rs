@@ -8,11 +8,12 @@ use raffia::{
     ast::{
         AtRule, AtRulePrelude, ClassSelector, ComplexSelector, ComplexSelectorChild,
         ComponentValue, CompoundSelector, Declaration, Dimension, Duration, Function, IdSelector,
-        Ident, InterpolableIdent, Length, NsPrefix, NsPrefixKind, NsPrefixUniversal,
-        PseudoClassSelector, PseudoClassSelectorArg, PseudoElementSelector,
-        PseudoElementSelectorArg, QualifiedRule, SelectorList, SimpleBlock, SimpleSelector,
-        Statement, Str, Stylesheet, TagNameSelector, TokenSeq, TypeSelector, UniversalSelector,
-        WqName,
+        Ident, InterpolableIdent, Length, MediaCondition, MediaConditionKind, MediaFeature,
+        MediaFeatureName, MediaFeaturePlain, MediaInParens, MediaQuery, MediaQueryList, NsPrefix,
+        NsPrefixKind, NsPrefixUniversal, PseudoClassSelector, PseudoClassSelectorArg,
+        PseudoElementSelector, PseudoElementSelectorArg, QualifiedRule, SelectorList, SimpleBlock,
+        SimpleSelector, Statement, Str, Stylesheet, TagNameSelector, TokenSeq, TypeSelector,
+        UniversalSelector, WqName,
     },
     token::{self, Comma, Hash, Number, Token, TokenWithSpan},
 };
@@ -96,8 +97,8 @@ where
     /// ```
     #[emitter]
     pub fn emit_at_rule(&mut self, at_rule: &AtRule<'_>) -> crate::Result {
+        write_raw!(self, Some("@".into()))?;
         emit!(self, at_rule.name);
-        write_raw!(self, Some(":".to_string()))?;
         emit!(self, at_rule.prelude);
         emit!(self, at_rule.block);
     }
@@ -122,7 +123,7 @@ where
             AtRulePrelude::Import(_) => todo!(),
             AtRulePrelude::Keyframes(_) => todo!(),
             AtRulePrelude::Layer(_) => todo!(),
-            AtRulePrelude::Media(_) => todo!(),
+            AtRulePrelude::Media(media) => emit!(self, media),
             AtRulePrelude::Namespace(_) => todo!(),
             AtRulePrelude::Nest(_) => todo!(),
             AtRulePrelude::Page(_) => todo!(),
@@ -131,6 +132,83 @@ where
             AtRulePrelude::ScrollTimeline(_) => todo!(),
             AtRulePrelude::Supports(_) => todo!(),
             AtRulePrelude::Unknown(_) => todo!(),
+        }
+    }
+
+    /// `query`
+    ///
+    /// ```css
+    /// /** (max-width: 1199.98px) */
+    /// @media (max-width: 1199.98px) {}
+    /// ```
+    #[emitter]
+    pub fn emit_media_query_list(
+        &mut self,
+        media_query_list: &MediaQueryList<'_>,
+    ) -> crate::Result {
+        self.emit_list(media_query_list.queries[..].into(), FormatSep::NONE)?
+    }
+
+    #[emitter]
+    pub fn emit_media_query(&mut self, media_query: &MediaQuery<'_>) -> crate::Result {
+        match media_query {
+            MediaQuery::ConditionOnly(condition_only) => emit!(self, condition_only),
+            MediaQuery::WithType(_) => todo!(),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_media_condition(&mut self, media_condition: &MediaCondition<'_>) -> crate::Result {
+        self.emit_list(media_condition.conditions[..].into(), FormatSep::NONE)?;
+    }
+
+    #[emitter]
+    pub fn emit_media_condition_kind(
+        &mut self,
+        media_condition_kind: &MediaConditionKind<'_>,
+    ) -> crate::Result {
+        match media_condition_kind {
+            MediaConditionKind::MediaInParens(media_in_parens) => emit!(self, media_in_parens),
+            MediaConditionKind::And(_) => todo!(),
+            MediaConditionKind::Or(_) => todo!(),
+            MediaConditionKind::Not(_) => todo!(),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_media_in_parens(&mut self, media_in_parens: &MediaInParens<'_>) -> crate::Result {
+        match media_in_parens {
+            MediaInParens::MediaCondition(condition) => emit!(self, condition),
+            MediaInParens::MediaFeature(feature) => emit!(self, feature),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_media_feature(&mut self, media_feature: &MediaFeature<'_>) -> crate::Result {
+        match media_feature {
+            MediaFeature::Plain(plain) => emit!(self, plain),
+            MediaFeature::Boolean(bool) => todo!(),
+            MediaFeature::Range(_) => todo!(),
+            MediaFeature::RangeInterval(_) => todo!(),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_media_feature_plain(
+        &mut self,
+        media_feature_plain: &MediaFeaturePlain<'_>,
+    ) -> crate::Result {
+        write_raw!(self, Some("(".into()))?;
+        emit!(self, media_feature_plain.name);
+        write_raw!(self, Some(":".into()))?;
+        emit!(self, media_feature_plain.value);
+        write_raw!(self, Some(")".into()))?;
+    }
+
+    #[emitter]
+    pub fn emit_media_feature_name(&mut self, name: &MediaFeatureName<'_>) -> crate::Result {
+        match name {
+            MediaFeatureName::Ident(ident) => emit!(self, ident),
         }
     }
 
@@ -291,6 +369,7 @@ where
 
     #[emitter]
     pub fn emit_pseudo_class(&mut self, pseudo: &PseudoClassSelector<'_>) -> crate::Result {
+        write_str!(self, ":")?;
         emit!(self, pseudo.name);
         emit!(self, pseudo.arg);
     }
@@ -461,16 +540,19 @@ where
         emit!(self, dimension.unit);
     }
 
+    /// `#abcdef`
     #[emitter]
     pub fn emit_hash(&mut self, hash: &Hash<'_>) -> crate::Result {
         write_raw!(self, Some(format!("#{}", hash.raw)))?;
     }
 
+    /// `666`
     #[emitter]
     pub fn emit_number(&mut self, number: &Number<'_>) -> crate::Result {
         write_raw!(self, Some(number.raw.to_string()))?;
     }
 
+    /// `,`
     #[emitter]
     pub fn emit_comma(&mut self, _comma: &Comma) -> crate::Result {
         write_raw!(self, Some(",".to_string()))?;
@@ -499,12 +581,14 @@ where
         write_raw!(self, Some(str.raw.to_string()))?;
     }
 
+    /// `1px`
     #[emitter]
     pub fn emit_length(&mut self, length: &Length<'_>) -> crate::Result {
         self.writer.write_raw(String::from(length.value.raw))?;
         emit!(self, length.unit);
     }
 
+    /// `1s`
     #[emitter]
     pub fn emit_duration(&mut self, duration: &Duration<'_>) -> crate::Result {
         self.writer.write_raw(duration.value.raw.to_string())?;
@@ -513,7 +597,6 @@ where
 
     #[emitter]
     pub fn emit_interpolable_ident(&mut self, ident: &InterpolableIdent<'_>) -> crate::Result {
-        // emit!(self, ident.);
         match ident {
             InterpolableIdent::Literal(literal) => emit!(self, literal),
             InterpolableIdent::SassInterpolated(_) => todo!(),

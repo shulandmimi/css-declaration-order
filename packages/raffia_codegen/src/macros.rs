@@ -67,3 +67,10 @@ macro_rules! write_raw {
         }
     }};
 }
+
+
+macro_rules! write_str {
+    ($s:expr, $t:expr) => {{
+        write_raw!($s, Some($t.into()))
+    }};
+}

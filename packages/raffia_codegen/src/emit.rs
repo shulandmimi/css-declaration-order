@@ -27,3 +27,13 @@ where
         }
     }
 }
+
+impl<T, E> Emit<Box<T>> for E
+where
+    E: Emit<T>,
+{
+    #[inline]
+    fn emit(&mut self, node: &Box<T>) -> Result {
+        self.emit(&**node)
+    }
+}
