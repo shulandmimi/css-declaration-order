@@ -6,7 +6,7 @@ pub use std::fmt::Result;
 use codegen_macro::emitter;
 use raffia::{
     ast::{
-        AtRule, AtRulePrelude, ClassSelector, ComplexSelector, ComplexSelectorChild,
+        self, AtRule, AtRulePrelude, ClassSelector, ComplexSelector, ComplexSelectorChild,
         ComponentValue, CompoundSelector, Declaration, Dimension, Duration, Function, IdSelector,
         Ident, InterpolableIdent, Length, MediaCondition, MediaConditionKind, MediaFeature,
         MediaFeatureName, MediaFeaturePlain, MediaInParens, MediaQuery, MediaQueryList, NsPrefix,
@@ -15,7 +15,7 @@ use raffia::{
         SimpleSelector, Statement, Str, Stylesheet, TagNameSelector, TokenSeq, TypeSelector,
         UniversalSelector, WqName,
     },
-    token::{self, Comma, Hash, Number, Token, TokenWithSpan},
+    token::{self, Comma, Hash, Token, TokenWithSpan},
 };
 
 mod emit;
@@ -439,7 +439,7 @@ where
             ComponentValue::LayerName(_) => todo!(),
             ComponentValue::LessVariable(_) => todo!(),
             ComponentValue::LessVariableVariable(_) => todo!(),
-            ComponentValue::Number(_) => todo!(),
+            ComponentValue::Number(number) => emit!(self, number),
             ComponentValue::Percentage(_) => todo!(),
             ComponentValue::Ratio(_) => todo!(),
             ComponentValue::SassBinaryExpression(_) => todo!(),
@@ -548,8 +548,13 @@ where
 
     /// `666`
     #[emitter]
-    pub fn emit_number(&mut self, number: &Number<'_>) -> crate::Result {
+    pub fn emit_token_number(&mut self, number: &token::Number<'_>) -> crate::Result {
         write_raw!(self, Some(number.raw.to_string()))?;
+    }
+
+    #[emitter]
+    pub fn emit_ast_number(&mut self, number: &ast::Number<'_>) -> crate::Result {
+        write_str!(self, number.raw);
     }
 
     /// `,`
