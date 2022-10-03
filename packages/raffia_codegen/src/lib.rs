@@ -87,6 +87,13 @@ where
         return Ok(());
     }
 
+    /// `@xxxx`
+    ///
+    /// ```css
+    /// @charset xxx
+    /// @media
+    /// ...
+    /// ```
     #[emitter]
     pub fn emit_at_rule(&mut self, at_rule: &AtRule<'_>) -> crate::Result {
         emit!(self, at_rule.name);
@@ -95,6 +102,12 @@ where
         emit!(self, at_rule.block);
     }
 
+    /// `prelude`
+    ///
+    /// ```css
+    /// /** (max-width: 1199.98px) */
+    /// @media (max-width: 1199.98px) {}
+    /// ```
     #[emitter]
     pub fn emit_prelude(&mut self, prelude: &AtRulePrelude<'_>) -> crate::Result {
         match prelude {
@@ -187,6 +200,7 @@ where
         )?;
     }
 
+    /// `.foo` | `#foo` | `tag` | `[xx=xx]` | `:last-child` | `::before`
     #[emitter]
     pub fn emit_simple_selector(&mut self, selector: &SimpleSelector<'_>) -> crate::Result {
         match selector {
@@ -201,6 +215,7 @@ where
         }
     }
 
+    /// `::before` | `::after`
     #[emitter]
     pub fn emit_pseudo_element_selector(
         &mut self,
@@ -285,7 +300,6 @@ where
         &mut self,
         pseudo: &PseudoClassSelectorArg<'_>,
     ) -> crate::Result {
-        println!("{:?}", pseudo);
         match pseudo {
             PseudoClassSelectorArg::CompoundSelector(_) => todo!(),
             PseudoClassSelectorArg::CompoundSelectorList(_) => todo!(),
