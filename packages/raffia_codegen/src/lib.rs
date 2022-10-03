@@ -8,8 +8,11 @@ use raffia::{
     ast::{
         AtRule, AtRulePrelude, ClassSelector, ComplexSelector, ComplexSelectorChild,
         ComponentValue, CompoundSelector, Declaration, Dimension, Duration, Function, IdSelector,
-        Ident, InterpolableIdent, Length, PseudoClassSelector, PseudoClassSelectorArg,
-        QualifiedRule, SelectorList, SimpleBlock, SimpleSelector, Statement, Str, Stylesheet,
+        Ident, InterpolableIdent, Length, NsPrefix, NsPrefixKind, NsPrefixUniversal,
+        PseudoClassSelector, PseudoClassSelectorArg, PseudoElementSelector,
+        PseudoElementSelectorArg, QualifiedRule, SelectorList, SimpleBlock, SimpleSelector,
+        Statement, Str, Stylesheet, TagNameSelector, TokenSeq, TypeSelector, UniversalSelector,
+        WqName,
     },
     token::{self, Comma, Hash, Number, Token, TokenWithSpan},
 };
@@ -189,14 +192,88 @@ where
         match selector {
             SimpleSelector::Class(class) => emit!(self, class),
             SimpleSelector::Id(id) => emit!(self, id),
-            SimpleSelector::Type(_) => todo!(),
+            SimpleSelector::Type(ty) => emit!(self, ty),
             SimpleSelector::Attribute(_) => todo!(),
             SimpleSelector::PseudoClass(pseudo) => emit!(self, pseudo),
-            SimpleSelector::PseudoElement(_) => todo!(),
+            SimpleSelector::PseudoElement(element) => emit!(self, element),
             SimpleSelector::Nesting(_) => todo!(),
             SimpleSelector::SassPlaceholder(_) => todo!(),
         }
     }
+
+    #[emitter]
+    pub fn emit_pseudo_element_selector(
+        &mut self,
+        selector: &PseudoElementSelector<'_>,
+    ) -> crate::Result {
+        write_raw!(self, Some("::".into()))?;
+        emit!(self, selector.name);
+        emit!(self, selector.arg);
+    }
+
+    #[emitter]
+    pub fn emit_pseudo_element_selector_arg(
+        &mut self,
+        selector_arg: &PseudoElementSelectorArg<'_>,
+    ) -> crate::Result {
+        match selector_arg {
+            PseudoElementSelectorArg::CompoundSelector(selector) => emit!(self, selector),
+            PseudoElementSelectorArg::Ident(ident) => emit!(self, ident),
+            PseudoElementSelectorArg::TokenSeq(token_seq) => emit!(self, token_seq),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_token_seq(&mut self, token_seq: &TokenSeq<'_>) -> crate::Result {
+        self.emit_list(token_seq.tokens[..].into(), FormatSep::COMMA)?;
+    }
+
+    #[emitter]
+    pub fn emit_selector_type(&mut self, selector_type: &TypeSelector<'_>) -> crate::Result {
+        match selector_type {
+            TypeSelector::TagName(tag_name) => emit!(self, tag_name),
+            TypeSelector::Universal(selector) => emit!(self, selector),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_universal_selector(&mut self, selector: &UniversalSelector<'_>) -> crate::Result {
+        write_raw!(self, Some("*".into()))?;
+        emit!(self, selector.prefix);
+    }
+
+    #[emitter]
+    pub fn emit_tag_name_selector(
+        &mut self,
+        tag_name_selector: &TagNameSelector<'_>,
+    ) -> crate::Result {
+        emit!(self, tag_name_selector.name);
+    }
+
+    #[emitter]
+    pub fn emit_wq_name(&mut self, name: &WqName<'_>) -> crate::Result {
+        emit!(self, name.prefix);
+        emit!(self, name.name);
+    }
+
+    #[emitter]
+    pub fn emit_ns_prefix(&mut self, ns_prefix: &NsPrefix<'_>) -> crate::Result {
+        emit!(self, ns_prefix.kind);
+    }
+
+    #[emitter]
+    pub fn emit_ns_prefix_kind(&mut self, ns_prefix_kind: &NsPrefixKind<'_>) -> crate::Result {
+        match ns_prefix_kind {
+            NsPrefixKind::Ident(ident) => emit!(self, ident),
+            NsPrefixKind::Universal(universal) => emit!(self, universal),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_ns_prefix_universal(&mut self, universal: &NsPrefixUniversal) -> crate::Result {
+        write_raw!(self, Some("*".into()))?;
+    }
+
     #[emitter]
     pub fn emit_pseudo_class(&mut self, pseudo: &PseudoClassSelector<'_>) -> crate::Result {
         emit!(self, pseudo.name);
