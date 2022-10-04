@@ -440,7 +440,7 @@ where
             ComponentValue::LessVariable(_) => todo!(),
             ComponentValue::LessVariableVariable(_) => todo!(),
             ComponentValue::Number(number) => emit!(self, number),
-            ComponentValue::Percentage(_) => todo!(),
+            ComponentValue::Percentage(percentage) => emit!(self, percentage),
             ComponentValue::Ratio(_) => todo!(),
             ComponentValue::SassBinaryExpression(_) => todo!(),
             ComponentValue::SassMap(_) => todo!(),
@@ -454,6 +454,13 @@ where
             ComponentValue::UnicodeRange(_) => todo!(),
             ComponentValue::Url(_) => todo!(),
         }
+    }
+
+
+    #[emitter]
+    pub fn emit_ast_percentage(&mut self, percentage: &ast::Percentage<'_>) -> crate::Result {
+        emit!(self, percentage.value);
+        write_str!(self, "%");
     }
 
     #[emitter]
