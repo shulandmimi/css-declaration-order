@@ -429,7 +429,7 @@ where
         match component_val {
             ComponentValue::BracketBlock(_) => todo!(),
             ComponentValue::Calc(_) => todo!(),
-            ComponentValue::Delimiter(_) => todo!(),
+            ComponentValue::Delimiter(delimiter) => emit!(self, delimiter),
             ComponentValue::Dimension(dimension) => emit!(self, dimension),
             ComponentValue::Function(fun) => emit!(self, fun),
             ComponentValue::HexColor(_) => todo!(),
@@ -456,18 +456,39 @@ where
         }
     }
 
+    #[emitter]
+    pub fn emit_ast_delimiter(&mut self, delimiter: &ast::Delimiter) -> crate::Result {
+        emit!(self, delimiter.kind);
+    }
+
+    #[emitter]
+    pub fn emit_ast_delimiter_kind(
+        &mut self,
+        delimiter_kind: &ast::DelimiterKind,
+    ) -> crate::Result {
+        match delimiter_kind {
+            ast::DelimiterKind::Comma => self.emit_ast_delimiter_kind_comma()?,
+            ast::DelimiterKind::Solidus => todo!(),
+            ast::DelimiterKind::Semicolon => todo!(),
+        };
+    }
+
+    pub fn emit_ast_delimiter_kind_comma(&mut self) -> crate::Result {
+        write_str!(self, ",")?;
+        Ok(())
+    }
 
     #[emitter]
     pub fn emit_ast_percentage(&mut self, percentage: &ast::Percentage<'_>) -> crate::Result {
         emit!(self, percentage.value);
-        write_str!(self, "%");
+        write_str!(self, "%")?;
     }
 
     #[emitter]
     pub fn emit_function(&mut self, fun: &ast::Function<'_>) -> crate::Result {
         emit!(self, fun.name);
         write_str!(self, "(")?;
-        self.emit_list(fun.args[..].into(), FormatSep::COMMA)?;
+        self.emit_list(fun.args[..].into(), FormatSep::NONE)?;
         write_str!(self, ")")?;
     }
 
