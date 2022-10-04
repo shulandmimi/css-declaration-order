@@ -285,12 +285,19 @@ where
             SimpleSelector::Class(class) => emit!(self, class),
             SimpleSelector::Id(id) => emit!(self, id),
             SimpleSelector::Type(ty) => emit!(self, ty),
-            SimpleSelector::Attribute(_) => todo!(),
+            SimpleSelector::Attribute(attribute) => emit!(self, attribute),
             SimpleSelector::PseudoClass(pseudo) => emit!(self, pseudo),
             SimpleSelector::PseudoElement(element) => emit!(self, element),
             SimpleSelector::Nesting(_) => todo!(),
             SimpleSelector::SassPlaceholder(_) => todo!(),
         }
+    }
+
+    #[emitter]
+    pub fn emit_attribute(&mut self, attribute_selector: &ast::AttributeSelector<'_>) -> crate::Result {
+        write_str!(self, "[")?;
+        emit!(self, attribute_selector.name);
+        write_str!(self, "]")?;
     }
 
     /// `::before` | `::after`
@@ -379,6 +386,7 @@ where
         &mut self,
         pseudo: &PseudoClassSelectorArg<'_>,
     ) -> crate::Result {
+        write_str!(self, "(")?;
         match pseudo {
             PseudoClassSelectorArg::CompoundSelector(_) => todo!(),
             PseudoClassSelectorArg::CompoundSelectorList(_) => todo!(),
@@ -387,9 +395,10 @@ where
             PseudoClassSelectorArg::Nth(_) => todo!(),
             PseudoClassSelectorArg::Number(_) => todo!(),
             PseudoClassSelectorArg::RelativeSelectorList(_) => todo!(),
-            PseudoClassSelectorArg::SelectorList(_) => todo!(),
+            PseudoClassSelectorArg::SelectorList(selecto_list) => emit!(self, selecto_list),
             PseudoClassSelectorArg::TokenSeq(_) => todo!(),
         }
+        write_str!(self, ")")?;
     }
 
     #[emitter]
