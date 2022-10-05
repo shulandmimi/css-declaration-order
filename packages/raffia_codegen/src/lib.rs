@@ -55,7 +55,7 @@ where
 
     #[emitter]
     pub fn emit_stylesheet(&mut self, node: &Stylesheet<'_>) -> crate::Result {
-        self.emit_list(node.statements[..].into(), FormatSep::MUTIPLE_LINE)?;
+        self.emit_list(node.statements[..].into(), FormatSep::NONE)?;
     }
 
     #[emitter]
@@ -425,7 +425,7 @@ where
         write_raw!(self, translate!(self, SepRule::BlockLeft))?;
         self.emit_list(
             rule.statements[..].into(),
-            FormatSep::SEMICOLON | FormatSep::MUTIPLE_LINE,
+            FormatSep::SEMICOLON,
         )?;
         write_raw!(self, translate!(self, SepRule::BlockRight))?;
     }
