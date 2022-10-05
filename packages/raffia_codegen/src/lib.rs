@@ -23,9 +23,9 @@ mod sep;
 mod types;
 mod writer;
 
-use crate::sep::SepRule;
+pub use crate::sep::SepRule;
 pub use emit::Emit;
-use sep::{FormatSep, SepSerialize};
+pub use sep::{FormatSep, SepSerialize};
 pub use types::css::{sep::CssSep, CssWriter::CssWriter};
 pub use writer::Writer;
 
@@ -99,8 +99,12 @@ where
     pub fn emit_at_rule(&mut self, at_rule: &AtRule<'_>) -> crate::Result {
         write_raw!(self, Some("@".into()))?;
         emit!(self, at_rule.name);
+        write_str!(self, " ")?;
         emit!(self, at_rule.prelude);
         emit!(self, at_rule.block);
+        if at_rule.block.is_none() {
+            write_str!(self, ";")?;
+        }
     }
 
     /// `prelude`
@@ -294,7 +298,10 @@ where
     }
 
     #[emitter]
-    pub fn emit_attribute(&mut self, attribute_selector: &ast::AttributeSelector<'_>) -> crate::Result {
+    pub fn emit_attribute(
+        &mut self,
+        attribute_selector: &ast::AttributeSelector<'_>,
+    ) -> crate::Result {
         write_str!(self, "[")?;
         emit!(self, attribute_selector.name);
         write_str!(self, "]")?;
@@ -437,7 +444,7 @@ where
     pub fn emit_component_value(&mut self, component_val: &ComponentValue<'_>) -> crate::Result {
         match component_val {
             ComponentValue::BracketBlock(_) => todo!(),
-            ComponentValue::Calc(_) => todo!(),
+            ComponentValue::Calc(calc) => emit!(self, calc),
             ComponentValue::Delimiter(delimiter) => emit!(self, delimiter),
             ComponentValue::Dimension(dimension) => emit!(self, dimension),
             ComponentValue::Function(fun) => emit!(self, fun),
@@ -463,6 +470,28 @@ where
             ComponentValue::UnicodeRange(_) => todo!(),
             ComponentValue::Url(_) => todo!(),
         }
+    }
+
+    #[emitter]
+    pub fn emit_ast_calc(&mut self, calc: &ast::Calc<'_>) -> crate::Result {
+        emit!(self, calc.left);
+        emit!(self, calc.op);
+        emit!(self, calc.right);
+    }
+
+    #[emitter]
+    pub fn emit_ast_calc_operation(&mut self, operation: &ast::CalcOperator) -> crate::Result {
+        emit!(self, operation.kind);
+    }
+
+    #[emitter]
+    pub fn emit_ast_calc_operation_kind(&mut self, operation: &ast::CalcOperatorKind) -> crate::Result {
+        match operation {
+            ast::CalcOperatorKind::Plus => write_str!(self, "+")?,
+            ast::CalcOperatorKind::Minus => write_str!(self, "-")?,
+            ast::CalcOperatorKind::Multiply => write_str!(self, "*")?,
+            ast::CalcOperatorKind::Division => write_str!(self, "/")?,
+        };
     }
 
     #[emitter]
