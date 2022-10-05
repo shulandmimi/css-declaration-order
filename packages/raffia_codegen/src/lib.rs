@@ -727,13 +727,19 @@ where
     pub fn emit_dimension(&mut self, dimension: &Dimension<'_>) -> crate::Result {
         match dimension {
             Dimension::Length(len) => emit!(self, len),
-            Dimension::Angle(_) => todo!(),
+            Dimension::Angle(angle) => emit!(self, angle),
             Dimension::Duration(duration) => emit!(self, duration),
             Dimension::Frequency(_) => todo!(),
             Dimension::Resolution(_) => todo!(),
             Dimension::Flex(_) => todo!(),
             Dimension::Unknown(_) => todo!(),
         }
+    }
+
+    #[emitter]
+    pub fn emit_ast_angle(&mut self, angle: &ast::Angle<'_>) -> crate::Result {
+        emit!(self, angle.value);
+        emit!(self, angle.unit);
     }
 
     #[emitter]

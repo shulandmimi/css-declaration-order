@@ -1,0 +1,11 @@
+.box {
+  rotate: 10deg;
+}
+
+.box {
+  rotate: 10;
+}
+
+.box {
+  transform: rotate(10deg);
+}
