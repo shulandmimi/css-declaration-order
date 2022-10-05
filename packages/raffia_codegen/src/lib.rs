@@ -8,12 +8,12 @@ use raffia::{
     ast::{
         self, AtRule, AtRulePrelude, ClassSelector, ComplexSelector, ComplexSelectorChild,
         ComponentValue, CompoundSelector, Declaration, Dimension, Duration, Function, IdSelector,
-        Ident, InterpolableIdent, Length, MediaCondition, MediaConditionKind, MediaFeature,
-        MediaFeatureName, MediaFeaturePlain, MediaInParens, MediaQuery, MediaQueryList, NsPrefix,
-        NsPrefixKind, NsPrefixUniversal, PseudoClassSelector, PseudoClassSelectorArg,
-        PseudoElementSelector, PseudoElementSelectorArg, QualifiedRule, SelectorList, SimpleBlock,
-        SimpleSelector, Statement, Str, Stylesheet, TagNameSelector, TokenSeq, TypeSelector,
-        UniversalSelector, WqName,
+        Ident, InterpolableIdent, InterpolableStr, Length, MediaCondition, MediaConditionKind,
+        MediaFeature, MediaFeatureName, MediaFeaturePlain, MediaInParens, MediaQuery,
+        MediaQueryList, NsPrefix, NsPrefixKind, NsPrefixUniversal, PseudoClassSelector,
+        PseudoClassSelectorArg, PseudoElementSelector, PseudoElementSelectorArg, QualifiedRule,
+        SelectorList, SimpleBlock, SimpleSelector, Statement, Str, Stylesheet, TagNameSelector,
+        TokenSeq, TypeSelector, UniversalSelector, WqName,
     },
     token::{self, Comma, Hash, Token, TokenWithSpan},
 };
@@ -423,10 +423,7 @@ where
     #[emitter]
     pub fn emit_simple_block(&mut self, rule: &SimpleBlock<'_>) -> crate::Result {
         write_raw!(self, translate!(self, SepRule::BlockLeft))?;
-        self.emit_list(
-            rule.statements[..].into(),
-            FormatSep::SEMICOLON,
-        )?;
+        self.emit_list(rule.statements[..].into(), FormatSep::SEMICOLON)?;
         write_raw!(self, translate!(self, SepRule::BlockRight))?;
     }
 
@@ -451,7 +448,7 @@ where
             ComponentValue::HexColor(color) => emit!(self, color),
             ComponentValue::IdSelector(_) => todo!(),
             ComponentValue::InterpolableIdent(ident) => emit!(self, ident),
-            ComponentValue::InterpolableStr(_) => todo!(),
+            ComponentValue::InterpolableStr(interpolable_str) => emit!(self, interpolable_str),
             ComponentValue::LayerName(_) => todo!(),
             ComponentValue::LessVariable(_) => todo!(),
             ComponentValue::LessVariableVariable(_) => todo!(),
@@ -472,6 +469,14 @@ where
         }
     }
 
+    #[emitter]
+    pub fn emit_interpolable_str(&mut self, str: &InterpolableStr<'_>) -> crate::Result {
+        match str {
+            InterpolableStr::Literal(literal) => emit!(self, literal),
+            InterpolableStr::SassInterpolated(_) => todo!(),
+            InterpolableStr::LessInterpolated(_) => todo!(),
+        }
+    }
 
     #[emitter]
     pub fn emit_hex_color(&mut self, color: &ast::HexColor<'_>) -> crate::Result {
@@ -492,7 +497,10 @@ where
     }
 
     #[emitter]
-    pub fn emit_ast_calc_operation_kind(&mut self, operation: &ast::CalcOperatorKind) -> crate::Result {
+    pub fn emit_ast_calc_operation_kind(
+        &mut self,
+        operation: &ast::CalcOperatorKind,
+    ) -> crate::Result {
         match operation {
             ast::CalcOperatorKind::Plus => write_str!(self, "+")?,
             ast::CalcOperatorKind::Minus => write_str!(self, "-")?,
