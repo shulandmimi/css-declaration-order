@@ -19,7 +19,7 @@ fn readfile(filename: &PathBuf) -> String {
     return String::from_utf8_lossy(buffer[..].into()).to_string();
 }
 
-#[testing("tests/ast/**/input.css")]
+#[testing("tests/ast/**/*/input.css")]
 fn run(filename: PathBuf) {
     let mut dirname = filename.clone();
     dirname.pop();

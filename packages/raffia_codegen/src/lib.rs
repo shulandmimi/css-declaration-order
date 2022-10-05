@@ -260,17 +260,36 @@ where
     pub fn emit_complex_selector(&mut self, selector: &ComplexSelector<'_>) -> crate::Result {
         self.emit_list(
             selector.children[..].into(),
-            FormatSep::SPACE | FormatSep::SINGLE_LINE,
+            FormatSep::NONE,
         )?;
     }
 
     #[emitter]
-    pub fn emit_computed_selector(&mut self, selector: &ComplexSelectorChild<'_>) -> crate::Result {
+    pub fn emit_computed_selector_child(&mut self, selector: &ComplexSelectorChild<'_>) -> crate::Result {
         match selector {
             ComplexSelectorChild::CompoundSelector(selector) => {
                 emit!(self, selector);
             }
-            ComplexSelectorChild::Combinator(combinator) => {}
+            ComplexSelectorChild::Combinator(combinator) => emit!(self, combinator),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_ast_combinator(&mut self, combinator: &ast::Combinator) -> crate::Result {
+        emit!(self, combinator.kind);
+    }
+
+    #[emitter]
+    pub fn emit_ast_combinator_kind(
+        &mut self,
+        combinator_kind: &ast::CombinatorKind,
+    ) -> crate::Result {
+        match combinator_kind {
+            ast::CombinatorKind::Descendant => write_str!(self, " ")?,
+            ast::CombinatorKind::NextSibling => write_str!(self, "+")?,
+            ast::CombinatorKind::Child => write_str!(self, ">")?,
+            ast::CombinatorKind::LaterSibling => write_str!(self, "~")?,
+            ast::CombinatorKind::Column => write_str!(self, "||")?,
         }
     }
 
