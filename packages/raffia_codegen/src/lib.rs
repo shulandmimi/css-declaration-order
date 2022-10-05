@@ -448,7 +448,7 @@ where
             ComponentValue::Delimiter(delimiter) => emit!(self, delimiter),
             ComponentValue::Dimension(dimension) => emit!(self, dimension),
             ComponentValue::Function(fun) => emit!(self, fun),
-            ComponentValue::HexColor(_) => todo!(),
+            ComponentValue::HexColor(color) => emit!(self, color),
             ComponentValue::IdSelector(_) => todo!(),
             ComponentValue::InterpolableIdent(ident) => emit!(self, ident),
             ComponentValue::InterpolableStr(_) => todo!(),
@@ -470,6 +470,13 @@ where
             ComponentValue::UnicodeRange(_) => todo!(),
             ComponentValue::Url(_) => todo!(),
         }
+    }
+
+
+    #[emitter]
+    pub fn emit_hex_color(&mut self, color: &ast::HexColor<'_>) -> crate::Result {
+        write_str!(self, "#")?;
+        write_str!(self, color.raw)?;
     }
 
     #[emitter]
