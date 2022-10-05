@@ -505,9 +505,35 @@ where
             ComponentValue::SassVariable(_) => todo!(),
             ComponentValue::TokenWithSpan(token) => emit!(self, token),
             ComponentValue::UnicodeRange(_) => todo!(),
-            ComponentValue::Url(_) => todo!(),
+            ComponentValue::Url(url) => emit!(self, url),
         }
     }
+
+    #[emitter]
+    pub fn emit_ast_url(&mut self, url: &ast::Url<'_>) -> crate::Result {
+        emit!(self, url.name);
+        emit!(self, url.value);
+        self.emit_list(url.modifiers[..].into(), FormatSep::NONE)?;
+    }
+
+    #[emitter]
+    pub fn emit_ast_url_value(&mut self, url_value: &ast::UrlValue<'_>) -> crate::Result {
+        write_str!(self, "(")?;
+        match url_value {
+            ast::UrlValue::Raw(raw) => emit!(self, raw),
+            ast::UrlValue::SassInterpolated(_) => todo!(),
+            ast::UrlValue::Str(str) => emit!(self, str),
+        }
+        write_str!(self, ")")?;
+    }
+
+    #[emitter]
+    pub fn emit_ast_url_value_raw(&mut self, url_raw: &ast::UrlRaw<'_>) -> crate::Result {
+        write_str!(self, url_raw.raw)?;
+    }
+
+    #[emitter]
+    pub fn emit_ast_url_modifier(&mut self, url_modifier: &ast::UrlModifier<'_>) -> crate::Result {}
 
     #[emitter]
     pub fn emit_interpolable_str(&mut self, str: &InterpolableStr<'_>) -> crate::Result {
