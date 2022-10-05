@@ -6,7 +6,7 @@ pub use std::fmt::Result;
 use codegen_macro::emitter;
 use raffia::{
     ast::{
-        self, AtRule, AtRulePrelude, ClassSelector, ComplexSelector, ComplexSelectorChild,
+        self, AnPlusB, AtRule, AtRulePrelude, ClassSelector, ComplexSelector, ComplexSelectorChild,
         ComponentValue, CompoundSelector, Declaration, Dimension, Duration, Function, IdSelector,
         Ident, InterpolableIdent, InterpolableStr, Length, MediaCondition, MediaConditionKind,
         MediaFeature, MediaFeatureName, MediaFeaturePlain, MediaInParens, MediaQuery,
@@ -258,14 +258,14 @@ where
 
     #[emitter]
     pub fn emit_complex_selector(&mut self, selector: &ComplexSelector<'_>) -> crate::Result {
-        self.emit_list(
-            selector.children[..].into(),
-            FormatSep::NONE,
-        )?;
+        self.emit_list(selector.children[..].into(), FormatSep::NONE)?;
     }
 
     #[emitter]
-    pub fn emit_computed_selector_child(&mut self, selector: &ComplexSelectorChild<'_>) -> crate::Result {
+    pub fn emit_computed_selector_child(
+        &mut self,
+        selector: &ComplexSelectorChild<'_>,
+    ) -> crate::Result {
         match selector {
             ComplexSelectorChild::CompoundSelector(selector) => {
                 emit!(self, selector);
@@ -418,13 +418,34 @@ where
             PseudoClassSelectorArg::CompoundSelectorList(_) => todo!(),
             PseudoClassSelectorArg::Ident(_) => todo!(),
             PseudoClassSelectorArg::LanguageRangeList(_) => todo!(),
-            PseudoClassSelectorArg::Nth(_) => todo!(),
+            PseudoClassSelectorArg::Nth(nth) => emit!(self, nth),
             PseudoClassSelectorArg::Number(_) => todo!(),
             PseudoClassSelectorArg::RelativeSelectorList(_) => todo!(),
             PseudoClassSelectorArg::SelectorList(selecto_list) => emit!(self, selecto_list),
             PseudoClassSelectorArg::TokenSeq(_) => todo!(),
         }
         write_str!(self, ")")?;
+    }
+
+    #[emitter]
+    pub fn emit_pseudo_class_selector_arg_nth(&mut self, nth: &ast::Nth<'_>) -> crate::Result {
+        match nth {
+            ast::Nth::Odd(odd) => emit!(self, odd),
+            ast::Nth::Even(even) => emit!(self, even),
+            ast::Nth::Integer(int) => emit!(self, int),
+            ast::Nth::AnPlusB(plus) => emit!(self, plus),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_ast_an_plus(&mut self, an_plus: &AnPlusB) -> crate::Result {
+        write_str!(self, an_plus.a.to_string())?;
+        if an_plus.b != 0 {
+            if an_plus.b > 0 {
+                write_str!(self, '+')?;
+            }
+            write_str!(self, an_plus.b.to_string())?;
+        }
     }
 
     #[emitter]
