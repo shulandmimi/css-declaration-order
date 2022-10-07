@@ -648,15 +648,10 @@ where
         delimiter_kind: &ast::DelimiterKind,
     ) -> crate::Result {
         match delimiter_kind {
-            ast::DelimiterKind::Comma => self.emit_ast_delimiter_kind_comma()?,
-            ast::DelimiterKind::Solidus => todo!(),
-            ast::DelimiterKind::Semicolon => todo!(),
+            ast::DelimiterKind::Comma => write_str!(self, ",")?,
+            ast::DelimiterKind::Solidus => write_str!(self, "/")?,
+            ast::DelimiterKind::Semicolon => write_str!(self, ";")?,
         };
-    }
-
-    pub fn emit_ast_delimiter_kind_comma(&mut self) -> crate::Result {
-        write_str!(self, ",")?;
-        Ok(())
     }
 
     #[emitter]
