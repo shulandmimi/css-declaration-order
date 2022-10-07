@@ -1,19 +1,18 @@
 #![deny(clippy::all)]
 #![allow(clippy::needless_update)]
-
 pub use std::fmt::Result;
 
 use codegen_macro::emitter;
 use raffia::{
     ast::{
         self, AnPlusB, AtRule, AtRulePrelude, ClassSelector, ComplexSelector, ComplexSelectorChild,
-        ComponentValue, CompoundSelector, Declaration, Dimension, Duration, Function, IdSelector,
-        Ident, InterpolableIdent, InterpolableStr, Length, MediaCondition, MediaConditionKind,
-        MediaFeature, MediaFeatureName, MediaFeaturePlain, MediaInParens, MediaQuery,
-        MediaQueryList, NsPrefix, NsPrefixKind, NsPrefixUniversal, PseudoClassSelector,
+        ComponentValue, CompoundSelector, Declaration, Dimension, Duration, IdSelector,
+        InterpolableIdent, InterpolableStr, Length, MediaCondition, MediaConditionKind,
+        MediaFeature, MediaFeatureBoolean, MediaFeatureName, MediaFeaturePlain, MediaInParens,
+        MediaQuery, MediaQueryList, NsPrefix, NsPrefixKind, NsPrefixUniversal, PseudoClassSelector,
         PseudoClassSelectorArg, PseudoElementSelector, PseudoElementSelectorArg, QualifiedRule,
-        SelectorList, SimpleBlock, SimpleSelector, Statement, Str, Stylesheet, TagNameSelector,
-        TokenSeq, TypeSelector, UniversalSelector, WqName,
+        SelectorList, SimpleBlock, SimpleSelector, Statement, Str, Stylesheet, SupportsInParens,
+        TagNameSelector, TokenSeq, TypeSelector, UniversalSelector, WqName,
     },
     token::{self, Comma, Hash, Token, TokenWithSpan},
 };
@@ -97,11 +96,16 @@ where
     /// ```
     #[emitter]
     pub fn emit_at_rule(&mut self, at_rule: &AtRule<'_>) -> crate::Result {
-        write_raw!(self, Some("@".into()))?;
+        write_str!(self, "@")?;
         emit!(self, at_rule.name);
-        write_str!(self, " ")?;
         emit!(self, at_rule.prelude);
-        emit!(self, at_rule.block);
+
+        match at_rule.name.raw {
+            "media" | "supports" if at_rule.block.is_some() => {
+                self.emit_simple_block_with_sep(at_rule.block.as_ref().unwrap(), FormatSep::NONE)?
+            }
+            _ => emit!(self, at_rule.block),
+        }
         if at_rule.block.is_none() {
             write_str!(self, ";")?;
         }
@@ -116,8 +120,11 @@ where
     #[emitter]
     pub fn emit_prelude(&mut self, prelude: &AtRulePrelude<'_>) -> crate::Result {
         match prelude {
-            AtRulePrelude::Charset(v) => emit!(self, v),
-            AtRulePrelude::ColorProfile(v) => todo!(),
+            AtRulePrelude::Charset(v) => {
+                space!(self);
+                emit!(self, v)
+            }
+            AtRulePrelude::ColorProfile(_) => todo!(),
             AtRulePrelude::Container(_) => todo!(),
             AtRulePrelude::CounterStyle(_) => todo!(),
             AtRulePrelude::CustomMedia(_) => todo!(),
@@ -125,18 +132,84 @@ where
             AtRulePrelude::FontFeatureValues(_) => todo!(),
             AtRulePrelude::FontPaletteValues(_) => todo!(),
             AtRulePrelude::Import(_) => todo!(),
-            AtRulePrelude::Keyframes(keyframes) => emit!(self, keyframes),
+            AtRulePrelude::Keyframes(keyframes) => {
+                space!(self);
+                emit!(self, keyframes)
+            }
             AtRulePrelude::Layer(_) => todo!(),
-            AtRulePrelude::Media(media) => emit!(self, media),
+            AtRulePrelude::Media(media) => {
+                space!(self);
+                emit!(self, media)
+            }
             AtRulePrelude::Namespace(_) => todo!(),
             AtRulePrelude::Nest(_) => todo!(),
             AtRulePrelude::Page(_) => todo!(),
             AtRulePrelude::PositionFallback(_) => todo!(),
             AtRulePrelude::Property(_) => todo!(),
             AtRulePrelude::ScrollTimeline(_) => todo!(),
-            AtRulePrelude::Supports(_) => todo!(),
+            AtRulePrelude::Supports(support) => {
+                space!(self);
+                emit!(self, support)
+            }
             AtRulePrelude::Unknown(_) => todo!(),
         }
+    }
+
+    #[emitter]
+    pub fn emit_ast_supports_condition(
+        &mut self,
+        support: &ast::SupportsCondition<'_>,
+    ) -> crate::Result {
+        write_str!(self, "(")?;
+        self.emit_list(support.conditions[..].into(), FormatSep::NONE)?;
+        write_str!(self, ")")?;
+    }
+
+    #[emitter]
+    pub fn emit_ast_supports_condition_kind(
+        &mut self,
+        support_kind: &ast::SupportsConditionKind<'_>,
+    ) -> crate::Result {
+        match support_kind {
+            ast::SupportsConditionKind::Not(not) => emit!(self, not),
+            ast::SupportsConditionKind::And(and) => emit!(self, and),
+            ast::SupportsConditionKind::Or(or) => emit!(self, or),
+            ast::SupportsConditionKind::SupportsInParens(parens) => emit!(self, parens),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_ast_supports_condition_not(&mut self, not: &ast::SupportsNot<'_>) -> crate::Result {
+        emit!(self, not.keyword);
+        emit!(self, not.condition);
+    }
+
+    #[emitter]
+    pub fn emit_ast_supports_condition_and(&mut self, and: &ast::SupportsAnd<'_>) -> crate::Result {
+        emit!(self, and.keyword);
+        emit!(self, and.condition);
+    }
+
+    #[emitter]
+    pub fn emit_ast_supports_condition_or(&mut self, or: &ast::SupportsOr<'_>) -> crate::Result {
+        emit!(self, or.keyword);
+        emit!(self, or.condition);
+    }
+
+    #[emitter]
+    pub fn emit_ast_supports_condition_support_in_parens(
+        &mut self,
+        parens: &SupportsInParens<'_>,
+    ) -> crate::Result {
+        match parens {
+            SupportsInParens::SupportsCondition(condition) => emit!(self, condition),
+            SupportsInParens::Feature(feature) => emit!(self, feature),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_ast_supports_decl(&mut self, decl: &ast::SupportsDecl<'_>) -> crate::Result {
+        emit!(self, decl.decl);
     }
 
     #[emitter]
@@ -178,7 +251,7 @@ where
         &mut self,
         media_query_list: &MediaQueryList<'_>,
     ) -> crate::Result {
-        self.emit_list(media_query_list.queries[..].into(), FormatSep::NONE)?
+        self.emit_list(media_query_list.queries[..].into(), FormatSep::COMMA)?
     }
 
     #[emitter]
@@ -192,7 +265,15 @@ where
     #[emitter]
     pub fn emit_ast_with_type(&mut self, with_type: &ast::MediaQueryWithType<'_>) -> crate::Result {
         emit!(self, with_type.modifier);
+        if with_type.modifier.is_some() {
+            space!(self);
+        }
         emit!(self, with_type.media_type);
+        if with_type.condition.is_some() {
+            space!(self);
+            write_str!(self, "and")?;
+            space!(self);
+        }
         emit!(self, with_type.condition);
     }
 
@@ -207,28 +288,102 @@ where
         media_condition_kind: &MediaConditionKind<'_>,
     ) -> crate::Result {
         match media_condition_kind {
-            MediaConditionKind::MediaInParens(media_in_parens) => emit!(self, media_in_parens),
-            MediaConditionKind::And(_) => todo!(),
-            MediaConditionKind::Or(_) => todo!(),
-            MediaConditionKind::Not(_) => todo!(),
+            MediaConditionKind::MediaInParens(media_in_parens) => {
+                emit!(self, media_in_parens)
+            }
+            MediaConditionKind::And(and) => emit!(self, and),
+            MediaConditionKind::Or(or) => emit!(self, or),
+            MediaConditionKind::Not(not) => emit!(self, not),
         }
     }
 
     #[emitter]
     pub fn emit_media_in_parens(&mut self, media_in_parens: &MediaInParens<'_>) -> crate::Result {
+        write_str!(self, "(")?;
         match media_in_parens {
-            MediaInParens::MediaCondition(condition) => emit!(self, condition),
-            MediaInParens::MediaFeature(feature) => emit!(self, feature),
+            MediaInParens::MediaCondition(condition) => {
+                emit!(self, condition);
+            }
+            MediaInParens::MediaFeature(feature) => {
+                emit!(self, feature);
+            }
         }
+        write_str!(self, ")")?;
+    }
+
+    #[emitter]
+    pub fn emit_media_and(&mut self, and: &ast::MediaAnd<'_>) -> crate::Result {
+        emit!(self, and.keyword);
+        space!(self);
+        emit!(self, and.media_in_parens);
+    }
+
+    #[emitter]
+    pub fn emit_media_or(&mut self, or: &ast::MediaOr<'_>) -> crate::Result {
+        emit!(self, or.keyword);
+        space!(self);
+        emit!(self, or.media_in_parens);
+    }
+
+    #[emitter]
+    pub fn emit_media_not(&mut self, not: &ast::MediaNot<'_>) -> crate::Result {
+        emit!(self, not.keyword);
+        space!(self);
+        emit!(self, not.media_in_parens);
     }
 
     #[emitter]
     pub fn emit_media_feature(&mut self, media_feature: &MediaFeature<'_>) -> crate::Result {
         match media_feature {
             MediaFeature::Plain(plain) => emit!(self, plain),
-            MediaFeature::Boolean(bool) => todo!(),
-            MediaFeature::Range(_) => todo!(),
-            MediaFeature::RangeInterval(_) => todo!(),
+            MediaFeature::Boolean(bool) => emit!(self, bool),
+            MediaFeature::Range(range) => emit!(self, range),
+            MediaFeature::RangeInterval(range_interval) => emit!(self, range_interval),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_media_feature_range_interval(
+        &mut self,
+        range_interval: &ast::MediaFeatureRangeInterval<'_>,
+    ) -> crate::Result {
+        emit!(self, range_interval.left);
+        emit!(self, range_interval.left_comparison);
+        emit!(self, range_interval.name);
+        emit!(self, range_interval.right_comparison);
+        emit!(self, range_interval.right);
+    }
+
+    #[emitter]
+    pub fn emit_media_feature_boolean(&mut self, bool: &MediaFeatureBoolean<'_>) -> crate::Result {
+        emit!(self, bool.name);
+    }
+
+    #[emitter]
+    pub fn emit_media_feature_name(&mut self, name: &MediaFeatureName<'_>) -> crate::Result {
+        match name {
+            MediaFeatureName::Ident(ident) => emit!(self, ident),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_ast_range(&mut self, range: &ast::MediaFeatureRange<'_>) -> crate::Result {
+        emit!(self, range.left);
+        emit!(self, range.comparison);
+        emit!(self, range.right);
+    }
+
+    #[emitter]
+    pub fn emit_ast_comparison(
+        &mut self,
+        comparison: &ast::MediaFeatureComparison,
+    ) -> crate::Result {
+        match comparison.kind {
+            ast::MediaFeatureComparisonKind::LessThan => write_str!(self, "<")?,
+            ast::MediaFeatureComparisonKind::LessThanOrEqual => write_str!(self, "<=")?,
+            ast::MediaFeatureComparisonKind::GreaterThan => write_str!(self, ">")?,
+            ast::MediaFeatureComparisonKind::GreaterThanOrEqual => write_str!(self, ">=")?,
+            ast::MediaFeatureComparisonKind::Equal => write_str!(self, "=")?,
         }
     }
 
@@ -237,18 +392,9 @@ where
         &mut self,
         media_feature_plain: &MediaFeaturePlain<'_>,
     ) -> crate::Result {
-        write_raw!(self, Some("(".into()))?;
         emit!(self, media_feature_plain.name);
         write_raw!(self, Some(":".into()))?;
         emit!(self, media_feature_plain.value);
-        write_raw!(self, Some(")".into()))?;
-    }
-
-    #[emitter]
-    pub fn emit_media_feature_name(&mut self, name: &MediaFeatureName<'_>) -> crate::Result {
-        match name {
-            MediaFeatureName::Ident(ident) => emit!(self, ident),
-        }
     }
 
     #[emitter]
@@ -453,7 +599,7 @@ where
     }
 
     #[emitter]
-    pub fn emit_ns_prefix_universal(&mut self, universal: &NsPrefixUniversal) -> crate::Result {
+    pub fn emit_ns_prefix_universal(&mut self, _universal: &NsPrefixUniversal) -> crate::Result {
         write_raw!(self, Some("*".into()))?;
     }
 
@@ -529,7 +675,10 @@ where
     ) -> crate::Result {
         write_raw!(self, translate!(self, SepRule::BlockLeft))?;
         self.emit_list_with_option(rule.statements[..].into(), move |elem| match elem {
-            Some(e) if e.is_keyframe_block() => FormatSep::NONE,
+            Some(e) => match e {
+                Statement::KeyframeBlock(_) => FormatSep::NONE,
+                _ => sep,
+            },
             _ => sep,
         })?;
         write_raw!(self, translate!(self, SepRule::BlockRight))?;
@@ -563,7 +712,7 @@ where
             ComponentValue::LessVariableVariable(_) => todo!(),
             ComponentValue::Number(number) => emit!(self, number),
             ComponentValue::Percentage(percentage) => emit!(self, percentage),
-            ComponentValue::Ratio(_) => todo!(),
+            ComponentValue::Ratio(ratio) => emit!(self, ratio),
             ComponentValue::SassBinaryExpression(_) => todo!(),
             ComponentValue::SassMap(_) => todo!(),
             ComponentValue::SassNamespacedExpression(_) => todo!(),
@@ -576,6 +725,13 @@ where
             ComponentValue::UnicodeRange(_) => todo!(),
             ComponentValue::Url(url) => emit!(self, url),
         }
+    }
+
+    #[emitter]
+    pub fn emit_ast_ratio(&mut self, ratio: &ast::Ratio<'_>) -> crate::Result {
+        emit!(self, ratio.numerator);
+        write_str!(self, "/")?;
+        emit!(self, ratio.denominator);
     }
 
     #[emitter]
@@ -602,7 +758,8 @@ where
     }
 
     #[emitter]
-    pub fn emit_ast_url_modifier(&mut self, url_modifier: &ast::UrlModifier<'_>) -> crate::Result {}
+    pub fn emit_ast_url_modifier(&mut self, _url_modifier: &ast::UrlModifier<'_>) -> crate::Result {
+    }
 
     #[emitter]
     pub fn emit_interpolable_str(&mut self, str: &InterpolableStr<'_>) -> crate::Result {
@@ -778,7 +935,7 @@ where
 
     #[emitter]
     pub fn emit_ast_number(&mut self, number: &ast::Number<'_>) -> crate::Result {
-        write_str!(self, number.raw);
+        write_str!(self, number.raw)?;
     }
 
     /// `,`
@@ -789,7 +946,12 @@ where
 
     #[emitter]
     pub fn emit_ident(&mut self, ident: &token::Ident<'_>) -> crate::Result {
-        write_raw!(self, Some(ident.raw.to_string()))?;
+        write_str!(self, ident.raw)?;
+    }
+
+    #[emitter]
+    pub fn emit_ast_ident(&mut self, ident: &ast::Ident<'_>) -> crate::Result {
+        write_str!(self, ident.raw)?;
     }
 
     #[emitter]
@@ -799,10 +961,16 @@ where
             Dimension::Angle(angle) => emit!(self, angle),
             Dimension::Duration(duration) => emit!(self, duration),
             Dimension::Frequency(_) => todo!(),
-            Dimension::Resolution(_) => todo!(),
+            Dimension::Resolution(resolution) => emit!(self, resolution),
             Dimension::Flex(_) => todo!(),
             Dimension::Unknown(_) => todo!(),
         }
+    }
+
+    #[emitter]
+    pub fn emit_resolution(&mut self, resolution: &ast::Resolution<'_>) -> crate::Result {
+        emit!(self, resolution.value);
+        emit!(self, resolution.unit);
     }
 
     #[emitter]
@@ -837,11 +1005,6 @@ where
             InterpolableIdent::SassInterpolated(_) => todo!(),
             InterpolableIdent::LessInterpolated(_) => todo!(),
         }
-    }
-
-    #[emitter]
-    pub fn emit_literal(&mut self, literal: &Ident<'_>) -> crate::Result {
-        self.writer.write_raw(literal.raw.to_string())?;
     }
 }
 

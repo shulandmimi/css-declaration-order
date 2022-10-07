@@ -11,11 +11,11 @@ impl SepSerialize<SepRule> for CssSep {
         }
     }
 
-    fn write_last(&mut self, sep: SepRule) -> Option<String> {
+    fn write_last(&mut self, _sep: SepRule) -> Option<String> {
         todo!();
     }
 
-    fn new_line(&mut self, sep: SepRule) -> Option<String> {
+    fn new_line(&mut self, _sep: SepRule) -> Option<String> {
         todo!()
     }
 }

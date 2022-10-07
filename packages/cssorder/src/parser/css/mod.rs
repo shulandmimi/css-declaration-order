@@ -1,5 +1,5 @@
 use raffia::ast::{
-    Declaration, Ident, InterpolableIdent, QualifiedRule, SimpleBlock, Statement, Stylesheet,
+    Declaration, Ident, QualifiedRule, SimpleBlock, Statement, Stylesheet,
 };
 use std::collections::HashMap;
 
@@ -22,7 +22,7 @@ impl Sorter {
     }
 
     fn sheet<'a>(&self, sheet: &mut Stylesheet<'a>) {
-        sheet.statements.iter_mut().for_each(|mut stat| {
+        sheet.statements.iter_mut().for_each(|stat| {
             match stat {
                 Statement::QualifiedRule(rule) => self.qualified_rule(rule),
                 _ => (),

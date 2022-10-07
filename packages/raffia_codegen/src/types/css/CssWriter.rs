@@ -28,7 +28,7 @@ where
         todo!()
     }
 
-    fn write_str(&mut self, v: String) -> crate::Result {
+    fn write_str(&mut self, _v: String) -> crate::Result {
         todo!()
     }
 

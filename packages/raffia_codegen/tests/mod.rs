@@ -8,7 +8,7 @@ use std::fs::{read, try_exists};
 use std::path::PathBuf;
 use testing::testing;
 
-fn exists(filename: &PathBuf) -> bool {
+fn _exists(filename: &PathBuf) -> bool {
     return try_exists(filename).is_ok_and(|exists| *exists);
 }
 

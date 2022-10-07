@@ -1,10 +1,9 @@
 use std::{env, path::PathBuf};
 
 use glob::glob;
-use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
-use quote::{quote, ToTokens, __private::parse};
-use syn::{parse_macro_input, token::Token, AttributeArgs, ItemFn, Lit, NestedMeta};
+use quote::{quote, ToTokens};
+use syn::{parse_macro_input, AttributeArgs, ItemFn, Lit, NestedMeta};
 
 #[proc_macro_attribute]
 pub fn testing(

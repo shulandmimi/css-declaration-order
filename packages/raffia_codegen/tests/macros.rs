@@ -1,5 +1,5 @@
 use raffia::{ast::Stylesheet, Parser, Syntax};
-use raffia_codegen::{CodeGenerator, CssSep, CssWriter, FormatSep, SepRule, SepSerialize, Writer};
+use raffia_codegen::{CodeGenerator, FormatSep, SepRule, SepSerialize, Writer};
 
 pub fn code_gen_factor<W, S>(source: &str, writer: W, sep: S)
 where
