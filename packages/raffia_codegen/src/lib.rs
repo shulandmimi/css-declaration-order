@@ -63,7 +63,7 @@ where
         match node {
             Statement::AtRule(rule) => emit!(self, rule),
             Statement::Declaration(declaration) => emit!(self, declaration),
-            Statement::KeyframeBlock(_) => todo!(),
+            Statement::KeyframeBlock(keyframe_block) => emit!(self, keyframe_block),
             Statement::LessVariableDeclaration(_) => todo!(),
             Statement::QualifiedRule(rule) => emit!(self, rule),
             Statement::SassContentAtRule(_) => todo!(),
@@ -125,7 +125,7 @@ where
             AtRulePrelude::FontFeatureValues(_) => todo!(),
             AtRulePrelude::FontPaletteValues(_) => todo!(),
             AtRulePrelude::Import(_) => todo!(),
-            AtRulePrelude::Keyframes(_) => todo!(),
+            AtRulePrelude::Keyframes(keyframes) => emit!(self, keyframes),
             AtRulePrelude::Layer(_) => todo!(),
             AtRulePrelude::Media(media) => emit!(self, media),
             AtRulePrelude::Namespace(_) => todo!(),
@@ -136,6 +136,34 @@ where
             AtRulePrelude::ScrollTimeline(_) => todo!(),
             AtRulePrelude::Supports(_) => todo!(),
             AtRulePrelude::Unknown(_) => todo!(),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_ast_keyframes_name(&mut self, keyframes: &ast::KeyframesName<'_>) -> crate::Result {
+        match keyframes {
+            ast::KeyframesName::Ident(ident) => emit!(self, ident),
+            ast::KeyframesName::Str(str) => emit!(self, str),
+        }
+    }
+
+    #[emitter]
+    pub fn emit_ast_keyframes_block(
+        &mut self,
+        keyframes: &ast::KeyframeBlock<'_>,
+    ) -> crate::Result {
+        self.emit_list(keyframes.selectors[..].into(), FormatSep::COMMA)?;
+        self.emit_simple_block_with_sep(&keyframes.block, FormatSep::SEMICOLON)?;
+    }
+
+    #[emitter]
+    pub fn emit_ast_keyframes_selector(
+        &mut self,
+        selector: &ast::KeyframeSelector<'_>,
+    ) -> crate::Result {
+        match selector {
+            ast::KeyframeSelector::Ident(ident) => emit!(self, ident),
+            ast::KeyframeSelector::Percentage(percentage) => emit!(self, percentage),
         }
     }
 
@@ -251,6 +279,28 @@ where
             }
 
             new_line!(self, sep)
+        }
+
+        Ok(())
+    }
+
+    fn emit_list_with_option<Elem, F>(&mut self, nodes: &[Elem], sep: F) -> crate::Result
+    where
+        Self: Emit<Elem>,
+        F: Fn(Option<&Elem>) -> FormatSep,
+    {
+        let end = nodes.len();
+        new_line!(self, sep(None));
+        for (idx, node) in nodes.iter().enumerate() {
+            emit!(self, node);
+
+            if idx != end - 1 {
+                write_raw!(self, translate!(self, sep(Some(node))))?;
+            } else {
+                write_raw!(self, write_last!(self, sep(Some(node))))?;
+            }
+
+            new_line!(self, sep(None))
         }
 
         Ok(())
@@ -462,9 +512,21 @@ where
 
     #[emitter]
     pub fn emit_simple_block(&mut self, rule: &SimpleBlock<'_>) -> crate::Result {
+        self.emit_simple_block_with_sep(rule, FormatSep::SEMICOLON)?;
+    }
+
+    pub fn emit_simple_block_with_sep(
+        &mut self,
+        rule: &SimpleBlock<'_>,
+        sep: FormatSep,
+    ) -> crate::Result {
         write_raw!(self, translate!(self, SepRule::BlockLeft))?;
-        self.emit_list(rule.statements[..].into(), FormatSep::SEMICOLON)?;
+        self.emit_list_with_option(rule.statements[..].into(), move |elem| match elem {
+            Some(e) if e.is_keyframe_block() => FormatSep::NONE,
+            _ => sep,
+        })?;
         write_raw!(self, translate!(self, SepRule::BlockRight))?;
+        Ok(())
     }
 
     #[emitter]
