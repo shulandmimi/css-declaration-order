@@ -185,8 +185,15 @@ where
     pub fn emit_media_query(&mut self, media_query: &MediaQuery<'_>) -> crate::Result {
         match media_query {
             MediaQuery::ConditionOnly(condition_only) => emit!(self, condition_only),
-            MediaQuery::WithType(_) => todo!(),
+            MediaQuery::WithType(with_type) => emit!(self, with_type),
         }
+    }
+
+    #[emitter]
+    pub fn emit_ast_with_type(&mut self, with_type: &ast::MediaQueryWithType<'_>) -> crate::Result {
+        emit!(self, with_type.modifier);
+        emit!(self, with_type.media_type);
+        emit!(self, with_type.condition);
     }
 
     #[emitter]
@@ -719,7 +726,7 @@ where
             Token::Number(number) => emit!(self, number),
             Token::NumberSign(_) => todo!(),
             Token::Percent(_) => todo!(),
-            Token::Percentage(_) => todo!(),
+            Token::Percentage(percentage) => emit!(self, percentage),
             Token::Plus(_) => todo!(),
             Token::PlusUnderscore(_) => todo!(),
             Token::Question(_) => todo!(),
@@ -744,6 +751,11 @@ where
     #[emitter]
     pub fn emit_token_rparen(&mut self, _rparen: &token::RParen) -> crate::Result {
         write_raw!(self, Some(")".to_string()))?;
+    }
+
+    #[emitter]
+    pub fn emit_token_percentage(&mut self, _percentage: &token::Percentage<'_>) -> crate::Result {
+        write_str!(self, "%")?;
     }
 
     #[emitter]
