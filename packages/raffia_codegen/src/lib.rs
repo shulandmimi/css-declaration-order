@@ -884,7 +884,7 @@ where
             Token::NumberSign(_) => todo!(),
             Token::Percent(_) => todo!(),
             Token::Percentage(percentage) => emit!(self, percentage),
-            Token::Plus(_) => todo!(),
+            Token::Plus(plus) => emit!(self, plus),
             Token::PlusUnderscore(_) => todo!(),
             Token::Question(_) => todo!(),
             Token::RBrace(_) => todo!(),
@@ -899,6 +899,11 @@ where
             Token::UrlRaw(_) => todo!(),
             Token::UrlTemplate(_) => todo!(),
         }
+    }
+
+    #[emitter]
+    pub fn emit_token_plus(&mut self, _plus: &token::Plus) -> crate::Result {
+        write_str!(self, "+")?;
     }
 
     #[emitter]
