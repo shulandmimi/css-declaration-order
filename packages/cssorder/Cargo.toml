@@ -7,5 +7,6 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "3.2.22", features = ["derive"] }
+glob = "0.3.0"
 raffia = "0.1.0"
 raffia_codegen = { path = "../raffia_codegen/" }
