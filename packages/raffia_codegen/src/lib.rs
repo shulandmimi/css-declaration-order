@@ -12,7 +12,7 @@ use raffia::{
         MediaQuery, MediaQueryList, NsPrefix, NsPrefixKind, NsPrefixUniversal, PseudoClassSelector,
         PseudoClassSelectorArg, PseudoElementSelector, PseudoElementSelectorArg, QualifiedRule,
         SelectorList, SimpleBlock, SimpleSelector, Statement, Str, Stylesheet, SupportsInParens,
-        TagNameSelector, TokenSeq, TypeSelector, UniversalSelector, WqName,
+        TagNameSelector, TokenSeq, TypeSelector, UniversalSelector, WqName, Flex,
     },
     token::{self, Comma, Hash, Token, TokenWithSpan},
 };
@@ -962,9 +962,15 @@ where
             Dimension::Duration(duration) => emit!(self, duration),
             Dimension::Frequency(_) => todo!(),
             Dimension::Resolution(resolution) => emit!(self, resolution),
-            Dimension::Flex(_) => todo!(),
+            Dimension::Flex(flex) => emit!(self, flex),
             Dimension::Unknown(_) => todo!(),
         }
+    }
+
+    #[emitter]
+    pub fn emit_ast_flex(&mut self, flex: &Flex<'_>) -> crate::Result {
+        emit!(self, flex.value);
+        emit!(self, flex.unit);
     }
 
     #[emitter]
