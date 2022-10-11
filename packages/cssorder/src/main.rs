@@ -67,7 +67,7 @@ fn main() {
             &mut ast,
             Config {
                 weight_map: Some(key_weight_map.clone()),
-                default_weight: Some(1000),
+                ..Config::default()
             },
         );
 

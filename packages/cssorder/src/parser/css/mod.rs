@@ -1,6 +1,4 @@
-use raffia::ast::{
-    Declaration, Ident, QualifiedRule, SimpleBlock, Statement, Stylesheet,
-};
+use raffia::ast::{Declaration, Ident, QualifiedRule, SimpleBlock, Statement, Stylesheet};
 use std::collections::HashMap;
 
 struct Sorter {
@@ -11,6 +9,15 @@ struct Sorter {
 pub struct Config {
     pub weight_map: Option<HashMap<String, isize>>,
     pub default_weight: Option<isize>,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            weight_map: HashMap::default().into(),
+            default_weight: Some(1000),
+        }
+    }
 }
 
 impl Sorter {
