@@ -11,12 +11,21 @@
 
 `css/less/scss/sass` declaration order CLI based on raffia
 
+## used
+
+```bash
+cd packages/cssorder
+
+cargo run -- --paths "../../examples/css/index.css"
+```
+
 ## features
 
-- [ ] css syntax
+- [x] css syntax
 - [ ] less syntax
 - [ ] scss syntax
 - [ ] sass syntax
+- [ ] output format
 
 ## LICENSE
 
